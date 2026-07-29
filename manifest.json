@@ -1,0 +1,19 @@
+{
+  "name": "AutoClear — מסביר טופס בדיקת רכב",
+  "short_name": "AutoClear",
+  "description": "מסביר בשפה פשוטה את טופס בדיקת הרכב לפני קנייה. כלי הסבר בלבד — אינו חוות דעת מקצועית.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0b0d",
+  "theme_color": "#0b0b0d",
+  "lang": "he",
+  "dir": "rtl",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    {"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ]
+}
