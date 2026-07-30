@@ -1,5 +1,5 @@
-const CACHE = "autoclear-v1.2.0";
-const FILES = ["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png"];
+const CACHE = "autoclear-v1.3.0";
+const FILES = ["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png","./privacy_policy.html"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

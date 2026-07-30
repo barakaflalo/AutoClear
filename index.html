@@ -1,0 +1,2078 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AutoClear — מסביר טופס בדיקת רכב</title>
+<meta name="description" content="AutoClear — מסביר בשפה פשוטה את טופס הבדיקה של רכב לפני קנייה. הסבר בלבד, לא חוות דעת מקצועית.">
+<meta name="theme-color" content="#0d0d0d" id="tc-meta">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AutoClear">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&family=Noto+Sans+Arabic:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0b0d; --bg2:#131315; --bg3:#1b1b1e; --bg4:#242428;
+  --border:#2c2c31; --border2:#3d3d44;
+  --text:#ececed; --text2:#9b9ba3; --text3:#5f5f68;
+  --accent:#c9a84c; --accent2:#8a6d2f; --accent-bg:#1c1607; --accent-txt:#0b0b0d;
+  --ok:#4caf72; --ok-bg:#0d2016;
+  --warn:#d9a441; --warn-bg:#231a08;
+  --bad:#cf4a4a; --bad-bg:#230d0d;
+  --info:#5b9bd5; --info-bg:#0b1622;
+  --font:'Rubik',system-ui,sans-serif;
+  --r:10px; --r-lg:16px;
+  --shadow:0 6px 28px rgba(0,0,0,.55);
+}
+[data-theme="blue"]{--accent:#5b9bd5;--accent2:#356b9c;--accent-bg:#0b1622;--accent-txt:#04101a}
+[data-theme="green"]{--accent:#4caf72;--accent2:#2e7048;--accent-bg:#0d2016;--accent-txt:#04140b}
+[data-theme="purple"]{--accent:#a184e0;--accent2:#6b4fa8;--accent-bg:#150e24;--accent-txt:#0a0614}
+[data-theme="red"]{--accent:#d4695b;--accent2:#984238;--accent-bg:#210e0b;--accent-txt:#160604}
+
+body.light{
+  --bg:#f4f2ee; --bg2:#ffffff; --bg3:#f0ece4; --bg4:#e6e0d4;
+  --border:#dcd6c9; --border2:#c3bcab;
+  --text:#1c1a16; --text2:#5e594e; --text3:#948d7d;
+  --accent-bg:#faf3dd; --accent-txt:#ffffff;
+  --ok-bg:#e6f4ec; --warn-bg:#fdf3e0; --bad-bg:#fbe9e9; --info-bg:#e8f1fa;
+  --shadow:0 6px 28px rgba(0,0,0,.10);
+}
+body.light[data-theme="gold"]{--accent:#9a7c25;--accent2:#6d5717}
+body.light[data-theme="blue"]{--accent:#2f6ea8}
+body.light[data-theme="green"]{--accent:#2e7048}
+body.light[data-theme="purple"]{--accent:#6b4fa8}
+body.light[data-theme="red"]{--accent:#a9463a}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:15px;line-height:1.6;min-height:100vh;
+  transition:background .18s,color .18s;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+body[lang="ar"]{font-family:'Noto Sans Arabic','Rubik',sans-serif}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.wrap{max-width:760px;margin:0 auto;padding:0 14px 90px}
+
+/* ---------- header ---------- */
+.topbar{
+  position:sticky;top:0;z-index:40;background:var(--bg);
+  border-bottom:1px solid var(--border);
+  padding:calc(env(safe-area-inset-top) + 8px) 14px 8px;
+}
+.topbar-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:8px}
+.brand{font-weight:700;font-size:17px;letter-spacing:.3px;color:var(--accent);flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand small{display:block;font-size:10px;color:var(--text3);font-weight:400;letter-spacing:0}
+.ai-led{width:9px;height:9px;border-radius:50%;background:var(--text3);flex:0 0 auto;
+  margin-inline-end:2px;box-shadow:0 0 0 0 transparent;transition:background .2s}
+.ai-led.on{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+.icon-btn{
+  width:36px;height:36px;border-radius:9px;border:1px solid var(--border);
+  background:var(--bg2);display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex:0 0 auto;transition:border-color .15s
+}
+.icon-btn:hover{border-color:var(--accent)}
+
+/* ---------- generic ---------- */
+.screen{display:none;animation:fade .22s ease}
+.screen.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+h2.title{font-size:21px;font-weight:700;margin:18px 0 4px}
+p.sub{color:var(--text2);font-size:13px;margin:0 0 16px}
+
+.card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:16px;margin-bottom:12px
+}
+.card.tight{padding:12px}
+
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:14px 16px;border-radius:var(--r);font-weight:600;font-size:15px;
+  border:1px solid var(--border2);background:var(--bg3);color:var(--text);
+  transition:transform .1s,border-color .15s,background .15s
+}
+.btn:active{transform:scale(.985)}
+.btn.primary{background:var(--accent);color:var(--accent-txt);border-color:var(--accent)}
+.btn.ghost{background:transparent;border-color:var(--accent);color:var(--accent)}
+.btn.sm{padding:9px 12px;font-size:13px;width:auto}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn-row .btn{width:auto;flex:1 1 130px}
+
+.home-btn{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:start;
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:16px;margin-bottom:10px;transition:border-color .15s,transform .1s
+}
+.home-btn:hover{border-color:var(--accent)}
+.home-btn:active{transform:scale(.99)}
+.home-btn .em{font-size:26px;flex:0 0 auto;width:44px;height:44px;border-radius:12px;
+  background:var(--accent-bg);display:flex;align-items:center;justify-content:center}
+.home-btn .tx{flex:1;min-width:0}
+.home-btn .tx b{display:block;font-size:16px;font-weight:600}
+.home-btn .tx span{display:block;font-size:12px;color:var(--text2);line-height:1.45}
+.home-btn .ar{color:var(--text3);font-size:18px}
+
+.back-btn{
+  display:flex;align-items:center;gap:8px;width:100%;justify-content:center;
+  padding:14px;margin:22px 0 8px;border-radius:var(--r);
+  border:1px solid var(--accent);color:var(--accent);background:transparent;
+  font-weight:600;font-size:15px
+}
+
+label.fld{display:block;font-size:12px;color:var(--text2);margin:12px 0 5px;font-weight:500}
+input.in,select.in,textarea.in{
+  width:100%;padding:12px 13px;border-radius:var(--r);
+  border:1px solid var(--border);background:var(--bg3);color:var(--text);outline:none
+}
+input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--accent)}
+textarea.in{min-height:96px;resize:vertical;line-height:1.6}
+.hint{font-size:11px;color:var(--text3);margin-top:5px;line-height:1.5}
+
+.chip{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;
+  font-size:11px;font-weight:600;border:1px solid var(--border2);background:var(--bg3);color:var(--text2)
+}
+.chip.ok{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.chip.warn{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.chip.bad{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.chip.info{background:var(--info-bg);color:var(--info);border-color:var(--info)}
+.chip.acc{background:var(--accent-bg);color:var(--accent);border-color:var(--accent2)}
+
+.note{
+  border-radius:var(--r);padding:11px 13px;font-size:12.5px;line-height:1.6;
+  border:1px solid var(--border);background:var(--bg3);margin:10px 0
+}
+.note.warn{background:var(--warn-bg);border-color:var(--warn)}
+.note.bad{background:var(--bad-bg);border-color:var(--bad)}
+.note.info{background:var(--info-bg);border-color:var(--info)}
+.note b{color:var(--text)}
+
+.disc{
+  font-size:10.5px;color:var(--text3);line-height:1.5;
+  border-inline-start:2px solid var(--border2);padding-inline-start:8px;margin-top:8px
+}
+
+.sect-lbl{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.2px;
+  text-transform:uppercase;margin:22px 0 8px}
+
+.kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+.kv:last-child{border-bottom:none}
+.kv span{color:var(--text2);flex:0 0 auto}
+.kv b{font-weight:600;text-align:end;word-break:break-word}
+
+/* form rows */
+.row{
+  display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)
+}
+.row .num{font-size:11px;color:var(--text3);width:20px;flex:0 0 auto;padding-top:3px;font-variant-numeric:tabular-nums}
+.row .nm{flex:1;min-width:0;font-size:14px;font-weight:500}
+.row .st{display:flex;gap:5px;flex:0 0 auto}
+.st-btn{width:34px;height:32px;border-radius:8px;border:1px solid var(--border2);
+  background:var(--bg3);font-size:14px;display:flex;align-items:center;justify-content:center}
+.st-btn.sel-ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.st-btn.sel-bad{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.row-note{width:100%;margin-top:7px}
+
+/* dictionary */
+.dict-item{border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;overflow:hidden;background:var(--bg2)}
+.dict-head{width:100%;display:flex;align-items:center;gap:9px;padding:13px;text-align:start}
+.dict-head b{flex:1;font-size:14px;font-weight:600}
+.dict-body{padding:0 13px 14px;font-size:13px;line-height:1.7;color:var(--text2);display:none}
+.dict-item.open .dict-body{display:block}
+.dict-body h5{margin:12px 0 3px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--text3)}
+.dict-body p{margin:0}
+.dict-body ul{margin:4px 0 0;padding-inline-start:18px}
+.dict-body li{margin-bottom:3px}
+
+/* modal */
+.ovl{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:90;display:none;
+  align-items:flex-end;justify-content:center;padding:0}
+.ovl.on{display:flex}
+.sheet{background:var(--bg2);border:1px solid var(--border);border-bottom:none;
+  border-radius:var(--r-lg) var(--r-lg) 0 0;width:100%;max-width:760px;max-height:92vh;
+  overflow-y:auto;padding:18px 16px calc(24px + env(safe-area-inset-bottom));box-shadow:var(--shadow);
+  animation:up .22s ease}
+@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.sheet h3{margin:0 0 4px;font-size:18px}
+.sheet-x{position:sticky;top:-18px;float:inline-end;font-size:22px;color:var(--text3);
+  background:var(--bg2);padding:0 4px}
+
+/* provider picker */
+.prov{border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:8px;
+  display:flex;gap:11px;align-items:flex-start;width:100%;text-align:start;background:var(--bg3)}
+.prov.sel{border-color:var(--accent);background:var(--accent-bg)}
+.prov .pi{font-size:21px}
+.prov .pt{flex:1;min-width:0}
+.prov .pt b{display:block;font-size:14px}
+.prov .pt span{display:block;font-size:11.5px;color:var(--text2);line-height:1.5}
+.prov-area{display:none;padding:12px;border:1px dashed var(--border2);border-radius:var(--r);
+  margin:-4px 0 10px;background:var(--bg3)}
+.prov-area.on{display:block}
+.prov-area ol{margin:8px 0 0;padding-inline-start:20px;font-size:12px;color:var(--text2);line-height:1.8}
+
+.shots{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.shot{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:1px solid var(--border2)}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot button{position:absolute;top:2px;inset-inline-end:2px;width:20px;height:20px;border-radius:50%;
+  background:rgba(0,0,0,.7);color:#fff;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center}
+
+/* toast */
+#toast{position:fixed;bottom:26px;inset-inline:0;margin:auto;width:max-content;max-width:88%;
+  background:var(--bg4);border:1px solid var(--accent);color:var(--text);
+  padding:11px 18px;border-radius:999px;font-size:13px;z-index:120;opacity:0;
+  pointer-events:none;transition:opacity .22s,transform .22s;transform:translateY(10px);text-align:center}
+#toast.on{opacity:1;transform:none}
+
+.srcbox{margin-top:10px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--bg3)}
+.srchd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 11px;border-bottom:1px solid var(--border);background:var(--bg4)}
+.srcrow{display:flex;gap:9px;padding:9px 11px;border-bottom:1px solid var(--border);align-items:flex-start}
+.srcrow:last-of-type{border-bottom:none}
+.srctag{flex:0 0 auto;font-size:11px;font-weight:600;color:var(--text2);min-width:78px;padding-top:1px}
+.srctx{flex:1;min-width:0;font-size:12.5px;line-height:1.6;color:var(--text)}
+.srcbox .disc{padding:8px 11px;margin:0;border-top:1px solid var(--border);border-inline-start:none}
+
+.spin{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);
+  border-radius:50%;display:inline-block;animation:sp .7s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.foot{text-align:center;padding:26px 0 10px;font-size:11px;color:var(--text3);line-height:1.9}
+.foot a{color:var(--accent);text-decoration:none}
+
+@media print{
+  .topbar,.back-btn,.btn,.btn-row,.icon-btn,.foot,#toast,.ovl{display:none!important}
+  body{background:#fff;color:#000}
+  .card{border:1px solid #ccc;break-inside:avoid}
+}
+</style>
+</head>
+<body data-theme="gold" lang="he">
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand" id="brandTx">AutoClear<small id="brandSub">מסביר טופס בדיקת רכב</small></div>
+    <span class="ai-led" id="aiLed" title="AI"></span>
+    <button class="icon-btn" id="btnTheme" title="ערכת צבע">🎨</button>
+    <button class="icon-btn" id="btnMode" title="יום/לילה">🌙</button>
+    <button class="icon-btn" id="btnLang" title="שפה">🌐</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ======== GATE ======== -->
+<div class="screen on" id="s-gate">
+  <h2 class="title" id="g-h">לפני שמתחילים</h2>
+  <p class="sub" id="g-s">חשוב שתקרא את זה. זה לוקח חצי דקה.</p>
+  <div class="card">
+    <div class="note bad" id="g-1"></div>
+    <div class="note warn" id="g-2"></div>
+    <div class="note" id="g-3"></div>
+    <div class="note info" id="g-4"></div>
+    <label style="display:flex;gap:10px;align-items:flex-start;margin-top:16px;cursor:pointer">
+      <input type="checkbox" id="g-ck" style="width:20px;height:20px;flex:0 0 auto;margin-top:2px;accent-color:var(--accent)">
+      <span style="font-size:13.5px;line-height:1.6" id="g-ckt"></span>
+    </label>
+    <button class="btn primary" id="g-go" disabled style="margin-top:14px"></button>
+  </div>
+</div>
+
+<!-- ======== HOME ======== -->
+<div class="screen" id="s-home">
+  <h2 class="title" id="h-h"></h2>
+  <p class="sub" id="h-s"></p>
+  <button class="home-btn" data-go="scan"><span class="em">📷</span><span class="tx"><b id="h-b0"></b><span id="h-t0"></span></span><span class="ar">›</span></button>
+  <button class="home-btn" data-go="form"><span class="em">📋</span><span class="tx"><b id="h-b1"></b><span id="h-t1"></span></span><span class="ar">›</span></button>
+  <button class="home-btn" data-go="dict"><span class="em">📖</span><span class="tx"><b id="h-b2"></b><span id="h-t2"></span></span><span class="ar">›</span></button>
+  <button class="home-btn" data-go="plate"><span class="em">🔎</span><span class="tx"><b id="h-b3"></b><span id="h-t3"></span></span><span class="ar">›</span></button>
+  <button class="home-btn" data-go="ai"><span class="em">🤖</span><span class="tx"><b id="h-b4"></b><span id="h-t4"></span></span><span class="ar">›</span></button>
+  <button class="home-btn" data-go="set"><span class="em">⚙️</span><span class="tx"><b id="h-b5"></b><span id="h-t5"></span></span><span class="ar">›</span></button>
+  <div class="note" id="h-note" style="margin-top:16px"></div>
+  <div class="foot">
+    <span id="f-ver"></span><br>
+    <a href="#" id="f-guide"></a> · <a href="#" id="f-about"></a> · <a href="#" id="f-priv"></a><br>
+    <span style="color:var(--accent)">AppNest</span> · Barak Aflalo · © 2026
+  </div>
+</div>
+
+
+<!-- ======== SCAN ======== -->
+<div class="screen" id="s-scan">
+  <h2 class="title" id="sc-h"></h2>
+  <p class="sub" id="sc-s"></p>
+
+  <div class="note info" id="sc-need" style="display:none"></div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span class="chip acc">1</span><b id="sc-l1"></b>
+    </div>
+    <div class="hint" id="sc-d1"></div>
+    <div class="shots" id="sc-lic-thumbs"></div>
+    <input type="file" id="sc-lic" accept="image/*" capture="environment" hidden>
+    <button class="btn" onclick="document.getElementById('sc-lic').click()">📷 <span id="sc-b1"></span></button>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span class="chip acc">2</span><b id="sc-l2"></b>
+    </div>
+    <div class="hint" id="sc-d2"></div>
+    <div class="shots" id="sc-frm-thumbs"></div>
+    <input type="file" id="sc-frm" accept="image/*" capture="environment" multiple hidden>
+    <button class="btn" onclick="document.getElementById('sc-frm').click()">📷 <span id="sc-b2"></span></button>
+  </div>
+
+  <button class="btn primary" id="sc-go" style="margin-top:6px"></button>
+  <div id="sc-prog"></div>
+  <div class="note" id="sc-priv" style="font-size:11.5px"></div>
+  <button class="back-btn" data-go="home">‹ <span class="bk"></span></button>
+</div>
+
+<!-- ======== REVIEW ======== -->
+<div class="screen" id="s-rev">
+  <h2 class="title" id="rv-h"></h2>
+  <p class="sub" id="rv-s"></p>
+  <div id="rv-body"></div>
+  <button class="btn primary" id="rv-go" style="margin-top:14px"></button>
+  <button class="btn" id="rv-edit" style="margin-top:8px"></button>
+  <button class="back-btn" data-go="scan">‹ <span id="rv-bk"></span></button>
+</div>
+
+<!-- ======== FORM ======== -->
+<div class="screen" id="s-form">
+  <h2 class="title" id="fm-h"></h2>
+  <p class="sub" id="fm-s"></p>
+
+  <div class="card tight">
+    <label class="fld" id="fm-l0"></label>
+    <select class="in" id="fm-type">
+      <option value="basic">נספח 2 — בדיקה כללית ללא מערכות ממוחשבות (21 סעיפים)</option>
+      <option value="full">נספח 1 — בדיקה מלאה כולל מערכות ממוחשבות (25 סעיפים)</option>
+    </select>
+    <div class="hint" id="fm-h0"></div>
+  </div>
+
+  <div class="card tight">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div style="flex:1 1 120px"><label class="fld" id="fm-lp"></label>
+        <input class="in" id="fm-plate" inputmode="numeric" placeholder="12-345-67"></div>
+      <div style="flex:1 1 120px"><label class="fld" id="fm-lk"></label>
+        <input class="in" id="fm-km" inputmode="numeric" placeholder="47396"></div>
+    </div>
+    <label class="fld" id="fm-lc"></label>
+    <input class="in" id="fm-inst" placeholder="">
+  </div>
+
+  <div class="sect-lbl" id="fm-rows"></div>
+  <div class="card tight" id="fm-list"></div>
+
+  <button class="btn primary" id="fm-run" style="margin-top:14px"></button>
+  <div class="hint" id="fm-cnt" style="text-align:center"></div>
+  <button class="back-btn" data-go="home">‹ <span class="bk"></span></button>
+</div>
+
+<!-- ======== RESULT ======== -->
+<div class="screen" id="s-res">
+  <h2 class="title" id="rs-h"></h2>
+  <p class="sub" id="rs-s"></p>
+  <div id="rs-body"></div>
+  <div class="btn-row">
+    <button class="btn" id="rs-print">🖨 <span id="rs-pt"></span></button>
+    <button class="btn" id="rs-share">📤 <span id="rs-st"></span></button>
+    <button class="btn ghost" id="rs-ai">🤖 <span id="rs-at"></span></button>
+    <button class="btn" id="rs-more">🔎 <span id="rs-mt"></span></button>
+  </div>
+  <button class="back-btn" data-go="form">‹ <span class="bk2"></span></button>
+</div>
+
+<!-- ======== DICT ======== -->
+<div class="screen" id="s-dict">
+  <h2 class="title" id="dc-h"></h2>
+  <p class="sub" id="dc-s"></p>
+  <input class="in" id="dc-q" placeholder="">
+  <div class="hint" id="dc-cnt"></div>
+  <div id="dc-list" style="margin-top:12px"></div>
+  <button class="back-btn" data-go="home">‹ <span class="bk"></span></button>
+</div>
+
+<!-- ======== PLATE ======== -->
+<div class="screen" id="s-plate">
+  <h2 class="title" id="pl-h"></h2>
+  <p class="sub" id="pl-s"></p>
+  <div class="card">
+    <label class="fld" id="pl-l"></label>
+    <input class="in" id="pl-in" inputmode="numeric" placeholder="12-345-67">
+    <button class="btn primary" id="pl-go" style="margin-top:12px"></button>
+    <div class="hint" id="pl-hint"></div>
+  </div>
+  <div id="pl-out"></div>
+  <button class="back-btn" data-go="home">‹ <span class="bk"></span></button>
+</div>
+
+<!-- ======== AI ======== -->
+<div class="screen" id="s-ai">
+  <h2 class="title" id="ai-h"></h2>
+  <p class="sub" id="ai-s"></p>
+  <div class="note info" id="ai-note"></div>
+  <div id="ai-provs"></div>
+  <button class="btn primary" id="ai-save" style="margin-top:6px"></button>
+  <button class="btn" id="ai-test" style="margin-top:8px"></button>
+  <div class="hint" id="ai-testout"></div>
+
+  <div class="sect-lbl" id="ai-extl"></div>
+  <div class="card">
+    <div style="font-size:13px;color:var(--text2);line-height:1.7" id="ai-extd"></div>
+    <button class="btn ghost" id="ai-ext" style="margin-top:10px"></button>
+  </div>
+  <button class="back-btn" data-go="home">‹ <span class="bk"></span></button>
+</div>
+
+<!-- ======== SETTINGS ======== -->
+<div class="screen" id="s-set">
+  <h2 class="title" id="st-h"></h2>
+  <div class="card">
+    <label class="fld" id="st-lu"></label>
+    <input class="in" id="st-user" placeholder="">
+    <div class="hint" id="st-hu"></div>
+    <label class="fld" id="st-lp"></label>
+    <input class="in" id="st-proxy" placeholder="https://...">
+    <div class="hint" id="st-hp"></div>
+  </div>
+  <div class="sect-lbl" id="st-lb"></div>
+  <div class="card">
+    <div class="btn-row" style="margin-top:0">
+      <button class="btn" id="st-exp">⬇ <span id="st-expt"></span></button>
+      <button class="btn" id="st-imp">⬆ <span id="st-impt"></span></button>
+      <button class="btn" id="st-csv">📊 CSV</button>
+      <button class="btn" id="st-pr">💰 <span id="st-prt"></span></button>
+    </div>
+    <input type="file" id="st-file" accept="application/json" hidden>
+    <input type="file" id="st-prfile" accept="application/json" hidden>
+    <div class="hint" id="st-prh"></div>
+  </div>
+  <div class="sect-lbl" id="st-ld"></div>
+  <div class="card">
+    <button class="btn" id="st-del" style="border-color:var(--bad);color:var(--bad)"></button>
+    <div class="hint" id="st-hd"></div>
+  </div>
+  <button class="back-btn" data-go="home">‹ <span class="bk"></span></button>
+</div>
+
+</div>
+
+<div class="ovl" id="ovl"><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
+<script>
+const D = {
+engine:["בלאי פנימי גבוה","שריפות שמן ממובילי שסתומים","פולי מנוע זורק","מנוע שורף שמן","לחץ שמן נמוך","לחץ עוקה גבוה (מבלאי)","מנוע נכבה באיחור","צינור נשם מנותק","מנוע לפני שיפוץ","רטיבות שמן במסנן אויר","דליפות לחץ גבוהות בצילינדרים","מצתים רטובים בשמן","דליפות לחץ בינוניות בצילינדרים","הברגות פגומות בראש מנוע","לחץ דחיסה נמוך","מעבר לחץ למערכת קירור","לחץ דחיסה גבוה","הספק מנוע ירוד","לחץ דחיסה לא זהה","סימני דליפה בין ראש מנוע והבלוק","מנוע מצלצל","נוזל קירור בשמן","רעש מערכת שסתומים","סימני מים בנשם מנוע","רעש מערכת תזמון","סדק בגוף המנוע","רעש מערכת תזמון ושסתומים","פקקי מים פגומים","רעשים במנוע","נזילת מים מפקקי מים","רעשים ונקישות פנימיים","תושבות מנוע פגומות","רעש פנימי ממסבים","מדיד שמן פגום","נקישות גל זיזים","מעיכות אגן שמן","חוסר שמן במנוע","הלחמות בבלוק המנוע","נזילות שמן","חופש גל ארכובה"],
+
+cooling:["נזילות מים ממצנן","ריקבון במצנן","רשת מצנן פגומה","מסגרת מצנן שבורה","מכסה מצנן פגום","מיכל עיבוי פגום","ניקוי מערכת הקירור","התחממות יתר במנוע","קורוזיה וסימני נזילה בחיבורים","נזילות מים","צינורות מים פגומים","פקקי מים נוזלים","נזילה ממשאבת מים","רעש ממשאבת מים","קורוזיה בית תרמוסטט","מערכת חימום לקויה","ברז מערכת חימום פגום","מאוורר פגום","מצמד מאוורר פגום","כונס אויר פגום","רצועה פגומה","שמן במים","קיים אויר במערכת הקירור","מערכת קירור לקויה"],
+
+fuel:["תצרוכת דלק גבוהה","מאייד לא תקין","דוושת דלק נתפסת","כבל גז פגום","צינורות דלק פגומים","מעיכות במיכל הדלק","תיקונים במיכל הדלק","נזילה במיכל הדלק","מסנן אויר לקוי","ריח דלק בתא נוסעים","משנק לא תקין","משאבת דלק פגומה","סיבובי מנוע לא יציבים","חסר צינורות לחימום תערובת","מחשב מערכת דלק לא נבדק","מדגש טורבו לא תקין","הזרקת דלק לקויה","מערכת הזרקת דלק לא נבדקה","מגדש טורבו לא נבדק"],
+
+ignition:["לתאם מנוע","מנוע מזייף","מצתים לא תקינים","חוטי הצתה פגומים","מצתים שונים","קיימים מאריכי מצתים","התנעה קשה","מנוע מצלצל","מנוע נכבה באיחור","מפלג רועש","מתג התנעה פגום","מערכת הצתה פגומה"],
+
+exhaust:["דוד עמעם אחורי פגום","דוד עמעם מרכזי פגום","דוד עמעם קדמי פגום","קצה צינור רקוב","דליפה בחיבורי צינורות","מעיכות במערכת","מתלים פגומים","צנרת פגומה","ריקבון כללי במערכת","סעפת סדוקה","דליפות מהסעפת","חסרים ברגים","מערכת פליטה רועשת","ממיר קטליטי לא תקין"],
+
+steering:["זוויות היגוי (כיוון)","חופש מייצב קדמי","שחיקת צמיגים","נקישות במתלה","סטיות הגה (בנסיעה)","חריקות במתלה","רעידות בגלגלים","גשר קדמי עקום","נקישה בתיבת הגה","גשר קדמי סדוק","חופש ונקישה בתיבת הגה","מעיכות בגשר","גומיות מגן להגה פגומות","משולש עקום","קופלונג הגה פגום","מעיכה במשולש","משאבת הגה פגומה","גשר אחורי עקום","נזילת שמן במערכת הידראולית","מוט מייצב אחורי עקום","בולם זעזועים להגה פגום","חופש תותבים ציר קדמי","חופש מוט הגה בתא נהג","חופש תותבים ציר אחורי","חופש במערכת היגוי","חופש מסבי גלגלים","חופש זרוע עזר","מסבי גלגלים רועשים","תיבת הגה פגומה","תומך סרן אחורי עקום","הגה קשה ולא חוזר","גלגל הגה אינו ממורכז","חוסר יציבות","סטיות במקביליות ומרחקי צירים","חופש חיבורי ציר קדמי","מידות מרכב אינם עפ״י הוראת יצרן","חופש משולשים במתלה","חופש במסרק הגה","זווית ציר אחורי פגומה","גומיות מגן קרועות"],
+
+springs:["בולמי זעזועים קדמיים חלשים","בולמי זעזועים אחוריים חלשים","תותבים לבולמי זעזועים","אוגר לחץ פגום","אוגר לחץ רועש","בומבות קשות","נזילת שמן במערכת הידראולית","קפיצים קדמיים נמוכים","קפיצים אחוריים נמוכים","קפיצים קדמיים אינם זהים","קפיצים אחוריים אינם זהים","קפיץ קדמי ימני שבור","קפיץ קדמי שמאלי שבור","קפיץ אחורי ימני שבור","קפיץ אחורי שמאלי שבור","תותבים לקפיצים","תותבים לקפיצים קדמיים","תותבים לקפיצים אחוריים","קיימות טבעות הגבהה בקפיצים","פין מרכזי לקפיצים שבור"],
+
+brakes:["רפידות שחוקות","צלחות שחוקות","בלימה לקויה","מתקן בקורת בלמים לקוי","רעידות בבלימה","סטיות בבלימה","חריקות בבלימה","נקישות בבלימה","דוושת בלם נמוכה","דוושת בלם יורדת","רעידות בלחיצת דוושת בלם","חופש דוושת בלם","נזילה במשאבת וויסות","משאבת וויסות פגומה","לפרק גלגלים לבדיקה","נזילה משאבת אופן קדמית ימין","נזילה משאבת אופן קדמית שמאל","נזילה משאבת אופן אחורית ימין","נזילה משאבת אופן אחורית שמאל","מנגנון בלם עזר פגום","כבל בלם עזר פגום","צינורות גמישים קדמיים פגומים","צינורות גמישים אחוריים פגומים","צינורות מתכת פגומים","מגבר בלם פגום","חסר ביטחונית לרפידות בלם","בלם יד אינו תקין","מערכת בלמים לקויה","מערכת ABS אינה פועלת","חסר נוזל בלמים"],
+
+tires:["צמיג חילוף פגום","צמיגים קדמיים פגומים","צמיגים אחוריים פגומים","שחיקת צמיגים בינונית","צמיג קדמי ימני פגום","צמיג קדמי שמאלי פגום","צמיג אחורי ימני פגום","צמיג אחורי שמאלי פגום","צמיגים יבשים","צמיגים לא זהים","צמיגים מחודשים","מידת צמיגים לא חוקית","חסר גלגל חילוף","כיפוף בחישוק","רעידה בצמיגים","חישוק לא מתאים לגודל הצמיגים"],
+
+electric:["תאריך ייצור מצבר","אין תאריך ייצור על המצבר","מצבר חלש","מצבר פגום","מצבר אינו מטופל","תושבת מצבר שבורה","חופש קוטבי מצבר","מתנע פגום-רועש","לבדוק זר שיניים בגלגל תנופה","אלטרנטור רועש","תומך אלטרנטור פגום","אין טעינה","פנס אחורי שבור","פנס חזית שבור","פנס סדוק","פנס חזית משוחרר","פנסי חזית פגומים","פנסים אחוריים פגומים","לתקן אור בלם","לתקן מערכת איתות","אור חניה אינו פועל","החלפת אורות אינה פועלת","מערכת אוורור פנימית אינה פועלת","מערכת מגבים אינה פועלת","צופר אינו פועל","מזגן אוויר אינו פועל","מזגן אוויר מנותק","חסר גז במזגן","חוטי חשמל גלויים","קצרים במערכת חשמל","הפעלת חלונות חשמל לקויה","נעילת דלתות אינה תקינה"],
+
+power:{"מצמד":["מצמד מפריד גבוה (בלאי)","מצמד מחליק","מצמד קשה","רעידות במצמד","כבל מצמד פגום","נזילת משאבת מצמד","מסב לחץ רועש","חסר מכסה בית מצמד","בית מצמד שבור ומתוקן"],
+"תיבה אוטומטית":["שמן כהה בלאי דסקיות הילוכים","החלפת הילוכים לקויה","נקישה בשילוב הילוכים","החלקה בתאוצה","רעידות בתאוצה","כבל הילוך חוזר פגום","מנגנון חניה לקוי","חדירת מים לשמן בתיבת ההילוכים"],
+"תיבת הילוכים":["נזילת שמן תיבת הילוכים","רעש מתיבת הילוכים","חופשים במנגנוני הילוכים","חריקות בשילוב הילוכים","שילוב הילוכים קשה","הילוך קופץ","תיבת הילוכים פגומה","תושבת תיבת הילוכים פגומה"],
+"גלי הינע":["גומיות מגן לציריות פגומות","חופש ונקישות בציריות","חופש ונקישות ציריה שמאלית","חופש ונקישות ציריה ימנית","חופש צלבים","קופלונג גל-הינע פגום","חופש תושבת גל-הינע"],
+"דיפרנציאל והנעה":["חופש דיפרנציאל","נזילת שמן בדיפרנציאל","דיפרנציאל רועש","נקישה בדיפרנציאל","נזילות שמן מערכת הנעה","רעידות בנסיעה","מערכת 4X4 אינה פועלת","נזילת שמן ציריות","רעש מסבי גלגלים"]},
+
+gauges:["מד חום פגום","מד דלק פגום","מד לחץ שמן פגום","מד טעינה פגום","מד מהירות פגום","מונה ק״מ פגום","מד תת-לחץ פגום","מד סיבובי מנוע פגום","ביקורת לחץ שמן לקויה","ביקורת בלמים לקויה","ביקורת טעינה לקויה","לוח מחוונים פגום","הבקרה בלוח שעונים פגומה","ריפוד לוח שעונים קרוע / סדוק","רעשים בלוח שעונים","טכוגרף פגום"],
+
+remarks:["הרכב לא נבדק בנסיעה","מצב כללי ברכב ירוד","לחזור להמשך בדיקה לאחר תיקון","לבדוק תצרוכת שמן בנסיעה","לבדוק לחץ שמן באמצעות מנומטר חיצוני","להחליף שמן מנוע ולחזור לבדיקה","מנוע לאחר תיקון","ראש מנוע לאחר תיקון","להוריד ראש מנוע ולחזור לבדיקה","לפרק גלגלים ולבדוק עובי רפידות","מס׳ המנוע אינו תואם לרישיון שהוצג בעת הבדיקה","שינוי מבנה"],
+
+ecu:["מערכת ניהול מנוע בנזין/דיזל (MED/EDC)","תיבת הילוכים אוטומטית/רובוטית (TCM)","תיבת העברה והינע סופי (4X4)","מערכת בקרת אקלים (HVAC)","מערכת בקרת מרכב (BCM/BSI)","מערכת כריות אויר ומותחני חגורות (AIR BAG)","מערכת תאורה ממוחשבת","מערכת מדיה וסטריאו","מערכת בלמים ממוחשבת ובקרת יציבות (ABS/ASR/ESP)","מערכת בקרת לחץ אויר בצמיגים (TPMS)","מערכת התראת טיפולים","מערכת בקרת לוח שעונים","מערכת בקרת הגה חשמלי (EPS)","מערכת כיוון אורות אוטומטי","מערכת שמירת נתיב וזיהוי שטח מת","מערכת תצוגת מידע בלוח שעונים","מערכת ראיית לילה","מערכת הכנה לתאונה (PRE-SAFE)","מערכת עזר לבלם (BAS)","מערכת בקרת שיוט אדפטיבית","מערכת זיהוי הולכי רגל","מערכת חנייה אוטומטית"]
+};
+
+/* --- שלדה: 6 רשימות לפי סוג שלדה × חומרה --- */
+const CH_MINOR=["חסר פינות לפגוש","חגורת בטיחות פגומה","פתיחת מכסה מנוע לקויה","פתיחת תא מטען לקויה","תומך מכסה מנוע פגום","דלתות אינם מכוונות","חופש צירים בדלתות","עצר ביטחון לדלת","גומיות לדלתות וחלונות פגומות","מנעול לדלת פגום","ריפוד פגום","מנגנוני שמשות אינם תקינים","כיפוף בפגוש","הפרש מקביליות מבעיה טכנית","שמשה פגומה"];
+const CH_HIGH_CORE=["קורה אורכית אחורית מעבר לנקודת רתום המתלה","כנף פנימית אחורית נושאת בולם זעזועים","עמודים — אמצעי / קדמי / אחורי","ריצפת תא נוסעים","דופן פנימית","גג כולל חיזוקים ומשקופים","פח חזית כולל גשר חזית עליון מולחם","כנף קדמית מולחמת","דופן פנימית בתא מנוע","קורה אורכית מעבר לתושבת רתום המתלה / מנוע","קורת רוחב מעבר לנקודת רתום המתלה / מנוע","קיר אש","בית גלגל קדמי המהווה חלק ממבנה המרכב"];
+const CH_HIGH_TAIL=["החלפה או איכול: פח דופן אחורי","החלפה או איכול: כנף אחורי מולחמת","הפרש במקביליות כתוצאה מעוות בשלדה","החלפה או איכול: פח סף פנימי","החלפה או איכול: פח חזית מולחם","צבע ופחחות כללית במצב ירוד","תיקונים כלליים בגוף המרכב","חיבורים לא מקוריים לרוחב הרכב"];
+const CH_LOW_CORE=["מכסה מנוע","כנף קדמי ימין המחוברת עם ברגים","כנף קדמי שמאלי המחוברת עם ברגים","דלתות קדמיות ימין או שמאל","דלת אחורית ימין או שמאל","מכסה תא מטען","רצפה אחורית בחלק הסמוך לפגוש","קורה אורכית קדמית עד לנקודת רתום המתלה / מנוע"];
+const CH_LOW_TAIL=["תיקון או פגיעה: קורות אורך אחוריות עד לנקודת רתום המתלה / מנוע","תיקון או פגיעה: כנף קדמית ימנית / שמאלית מולחמת","תיקון או פגיעה: כנף אחורית ימנית / שמאלית מולחמת","תיקון או פגיעה: פח דופן אחורית","תיקון או פגיעה: קורת רוחב אחורית עד לנקודת רתום המתלה / מנוע","תיקון או פגיעה: פח סף חיצוני","תיקון או פגיעה: פח חזית מולחם","חדירת מים לתא הנוסעים / תא מטען"];
+const P="פגיעה, תיקון, איכול ו/או החלפה: ";
+const RIZPA_NEAR="ריצפה אחורית בחלק הסמוך לקו ציר רוחב האופנים";
+const RIZPA_BEYOND="ריצפה אחורית מעבר לקו ציר רוחב האופנים";
+
+D.chassis={
+ body:{ high:[P+RIZPA_NEAR,P+RIZPA_BEYOND,...CH_HIGH_CORE.map(x=>P+x),...CH_HIGH_TAIL],
+        low:[...CH_LOW_CORE.map(x=>P+x),...CH_LOW_TAIL], minor:CH_MINOR },
+ separate:{ high:[P+RIZPA_BEYOND,...CH_HIGH_CORE.map(x=>P+x),...CH_HIGH_TAIL],
+        low:[...CH_LOW_CORE.map(x=>P+x),P+RIZPA_NEAR,...CH_LOW_TAIL], minor:CH_MINOR }
+};
+const FORM_FULL=[
+ {n:1,t:"מנוע",src:"engine"},
+ {n:2,t:"מערכת ניהול המנוע",src:"engine",ecu:1},
+ {n:3,t:"מערכת הקירור",src:"cooling"},
+ {n:4,t:"מערכת דלק",src:"fuel"},
+ {n:5,t:"מערכת הצתה / הזרקה",src:"ignition"},
+ {n:6,t:"מערכת גדוש מנוע",src:"fuel"},
+ {n:7,t:"מערכות הנעה של רכב היברידי / חשמלי",src:"power",ecu:1},
+ {n:8,t:"מערכת טעינה",src:"electric"},
+ {n:9,t:"מערכת ההתנעה (כולל מצבר)",src:"electric"},
+ {n:10,t:"מצמד",src:"power"},
+ {n:11,t:"תיבת הילוכים",src:"power"},
+ {n:12,t:"תיבת העברת הכוח",src:"power"},
+ {n:13,t:"ציריות / גל הינע",src:"power"},
+ {n:14,t:"סרן הנעה",src:"steering"},
+ {n:15,t:"מערכת מתלה קדמי / אקטיבית",src:"springs"},
+ {n:16,t:"מערכת מתלה אחורי / אקטיבית",src:"springs"},
+ {n:17,t:"מערכת ההיגוי (חשמלי / הידראולי)",src:"steering"},
+ {n:18,t:"מערכת הבלמים (ללא פירוק גלגלים) כולל ABS, ESP",src:"brakes"},
+ {n:19,t:"צמיגים וחישוקים (כולל TPMS)",src:"tires"},
+ {n:20,t:"מערכת הפליטה ומערכות למניעת זיהום אוויר",src:"exhaust"},
+ {n:21,t:"מערכות בטיחות פסיביות לסוגיהן",src:"ecu"},
+ {n:22,t:"שילדת מרכב או שילדה נפרדת",src:"CHASSIS"},
+ {n:23,t:"מערכת התאורה ומחוונים",src:"gauges",also:"electric"},
+ {n:24,t:"מערכות ממוחשבות ואלקטרוניות כלליות",src:"ecu"},
+ {n:25,t:"הערות כלליות",src:"remarks",notesonly:1}
+];
+const FORM_BASIC=[
+ {n:1,t:"מנוע",src:"engine"},
+ {n:2,t:"מערכת הקירור",src:"cooling"},
+ {n:3,t:"מערכת דלק",src:"fuel"},
+ {n:4,t:"מערכת הצתה",src:"ignition"},
+ {n:5,t:"מערכת גידוש המנוע",src:"fuel"},
+ {n:6,t:"מערכות הנעה",src:"power"},
+ {n:7,t:"מערכת הטעינה",src:"electric"},
+ {n:8,t:"מערכת הפליטה ומערכות למניעת זיהום אוויר",src:"exhaust"},
+ {n:9,t:"מערכת ההתנעה (כולל מצבר)",src:"electric"},
+ {n:10,t:"מצמד",src:"power"},
+ {n:11,t:"תיבת הילוכים",src:"power"},
+ {n:12,t:"תיבת העברת הכוח",src:"power"},
+ {n:13,t:"ציריות / גל הינע",src:"power"},
+ {n:14,t:"מערכת מתלה קדמי",src:"springs"},
+ {n:15,t:"מערכת מתלה אחורי",src:"springs"},
+ {n:16,t:"מערכת ההיגוי",src:"steering"},
+ {n:17,t:"מערכת הבלמים (ללא פירוק גלגלים)",src:"brakes"},
+ {n:18,t:"צמיגים וחישוקים",src:"tires"},
+ {n:19,t:"שילדת מרכב או שילדה נפרדת",src:"CHASSIS"},
+ {n:20,t:"מערכת תאורה",src:"electric"},
+ {n:21,t:"הערות כלליות",src:"remarks",notesonly:1}
+];
+/* =====================================================================
+   AutoClear — שכבת ההסבר
+   מפתח = נוסח האבחנה המדויק מנספח 5. הערך = הסבר בשפת יומיום.
+   sev: safety | high | med | low | info      cost: 0..5 (טווח להמחשה)
+   ask: מה כדאי לשאול      amb: ניסוח דו-משמעי שמחייב בירור
+   ===================================================================== */
+/* אין לנו מחירון. cost = סדר גודל בלבד, במילים ולא במספרים.
+   מספרים אמיתיים נכנסים רק דרך מחירון שהמשתמש טוען בעצמו (הגדרות). */
+
+/* הסבר ברירת מחדל לכל קטגוריה — נכנס לפעולה כשאין ערך פרטני */
+const CAT={
+engine:{sev:"high",cost:3,he:"סעיף במנוע עצמו. תיקוני מנוע הם בדרך כלל היקרים ביותר ברכב, והפער בין תקלה קטנה לגדולה עצום. כל ממצא כאן מצדיק אבחון נפרד לפני החלטה.",ask:["מה בדיוק נמצא ומה נדרש כדי לתקן?","האם התקלה מחמירה עם הזמן או יציבה?"]},
+cooling:{sev:"high",cost:2,he:"מערכת הקירור שומרת על טמפרטורת המנוע. תקלות כאן זולות יחסית לתקן, אבל אם מתעלמים מהן הן עלולות לגרום לנזק יקר במנוע.",ask:["האם יש נזילה פעילה כרגע?","האם יש עדות שהמנוע התחמם בעבר?"]},
+fuel:{sev:"med",cost:2,he:"מערכת הדלק — מהמיכל ועד למנוע. הטווח כאן רחב מאוד: מצינור סדוק ועד למשאבת הזרקה.",ask:["איזה חלק בדיוק צריך החלפה?"]},
+ignition:{sev:"med",cost:1,he:"מערכת ההצתה מדליקה את התערובת במנוע. ברוב המקרים מדובר בחלקי תחזוקה שוטפת שמתבלים.",ask:["מתי הוחלפו מצתים לאחרונה?"]},
+exhaust:{sev:"med",cost:2,he:"מערכת הפליטה מוציאה את גזי השריפה. חלק מהתקלות הן רעש בלבד, אחרות מונעות מעבר טסט.",ask:["האם הרכב יעבור טסט במצב הזה?"]},
+steering:{sev:"safety",cost:2,he:"היגוי ומתלים — מה שמחזיק את הרכב על הכביש ומאפשר לשלוט בו. סעיף בטיחותי.",ask:["האם הרכב בטוח לנסיעה כרגע?","האם הליקוי נובע ממכה או מבלאי?"]},
+springs:{sev:"safety",cost:2,he:"קפיצים ובולמי זעזועים. משפיעים ישירות על יציבות, בלימה ושחיקת צמיגים.",ask:["צריך להחליף בזוגות או רק צד אחד?"]},
+brakes:{sev:"safety",cost:2,he:"מערכת הבלמים. הסעיף הבטיחותי החשוב ביותר — לא נוסעים עם ליקוי פתוח כאן.",ask:["האם מותר לנסוע ברכב לפני התיקון?"]},
+tires:{sev:"safety",cost:2,he:"צמיגים וחישוקים. חלק מהפריטים הם החלפה פשוטה, אבל צמיג פגום הוא סיכון בטיחותי מיידי.",ask:["כמה צמיגים צריך להחליף?"]},
+electric:{sev:"med",cost:1,he:"חשמל, מצבר, תאורה ואביזרים. רוב הפריטים כאן זולים יחסית, אבל תקלות חשמל נוטות להיות מעצבנות לאיתור.",ask:["האם התקלה קבועה או מופיעה לסירוגין?"]},
+power:{sev:"high",cost:3,he:"מערכת הנעה — מצמד, תיבת הילוכים, גלי הינע ודיפרנציאל. אחרי המנוע, זה הסעיף היקר ביותר.",ask:["האם מדובר בתיקון או בשיפוץ מכלול שלם?"]},
+gauges:{sev:"low",cost:1,he:"לוח שעונים ומחוונים. ברוב המקרים לא מונע נסיעה, אבל מונה ק״מ פגום הוא סיפור אחר לגמרי.",ask:["האם זה משפיע על מד הקילומטראז'?"]},
+remarks:{sev:"info",cost:0,he:"הערה כללית של הבוחן — לרוב בקשה לבדיקה נוספת, לא ליקוי בפני עצמו.",ask:["מה בדיוק לא נבדק ולמה?"]},
+ecu:{sev:"info",cost:0,he:"מערכת ממוחשבת. בבדיקה מסוג נספח 2 המערכות הממוחשבות כלל לא נבדקות — היעדר סימון אינו אומר שהן תקינות.",ask:["האם נעשתה סריקת תקלות ממוחשבת?"]},
+chassis:{sev:"high",cost:2,he:"שלדה ומרכב. כאן החומרה נקבעת לפי החלק שנפגע, והטופס עצמו מסווג את זה עבורך.",ask:["האם הפגיעה בחלק מבני או בחלק מתפרק?"]}
+};
+
+/* הסברים פרטניים */
+const EXPL={
+/* ---------- מנוע ---------- */
+"מנוע שורף שמן":{sev:"high",cost:4,he:"המנוע צורך שמן מעבר לרגיל — כלומר שמן נכנס לתאי הבעירה ונשרף. לרוב סימן לבלאי פנימי. אפשר לחיות עם זה אם הצריכה קטנה ומוסיפים שמן, אבל זה מצב שמחמיר.",ask:["כמה ליטר שמן בכמה ק״מ?","האם הבוחן מדד או רק מעריך?"]},
+"לבדוק תצרוכת שמן בנסיעה":{sev:"info",cost:0,he:"הבוחן לא הצליח לקבוע במקום אם המנוע צורך שמן, וביקש לבדוק זאת בנסיעה ממושכת. זו לא קביעה שיש תקלה — זו בקשה לבדיקה נוספת.",ask:["אפשר לעשות מדידה של ליטר שמן על פני 1,000 ק״מ?"],amb:"זה סעיף שמופיע בהרבה טפסים כשגרה. הוא לא בהכרח מעיד על בעיה."},
+"בלאי פנימי גבוה":{sev:"high",cost:5,he:"החלקים הנעים בתוך המנוע שחוקים. זה בדרך כלל הקדמה לשיפוץ מנוע — הסעיף היקר ביותר שיכול להופיע בטופס.",ask:["מה עלות שיפוץ מנוע לדגם הזה?","כמה ק״מ עוד אפשר לנסוע ככה?"]},
+"מנוע לפני שיפוץ":{sev:"high",cost:5,he:"הבוחן מעריך שהמנוע קרוב לסוף חייו במצבו הנוכחי וידרוש שיפוץ. זה הממצא החמור ביותר במנוע.",ask:["מה בדיוק הוביל למסקנה הזו?"]},
+"לחץ שמן נמוך":{sev:"high",cost:4,he:"השמן לא נדחף בלחץ מספיק בתוך המנוע. השמן הוא מה שמונע מהחלקים להישחק זה בזה, אז זה סעיף רציני.",ask:["האם נמדד עם מנומטר חיצוני או רק לפי נורה?"]},
+"נזילות שמן":{sev:"med",cost:2,he:"שמן דולף מהמנוע החוצה. לרוב אטם שהתקשה. חשוב לדעת מאיפה — אטם מכסה שסתומים זול, אטם ראש מנוע יקר בהרבה.",ask:["מאיזה אטם בדיוק דולף?"]},
+"נוזל קירור בשמן":{sev:"high",cost:5,he:"מים ממערכת הקירור מתערבבים בשמן המנוע. בדרך כלל אטם ראש מנוע שרוף או ראש מעוות. תיקון יקר.",ask:["האם נעשתה בדיקת לחץ לאיתור המקור?"]},
+"שמן במים":{sev:"high",cost:5,he:"אותו סיפור בכיוון ההפוך — שמן נכנס למערכת הקירור. שוב, לרוב אטם ראש מנוע. זה סעיף שמצדיק לעצור ולחשוב.",ask:["מה עלות החלפת אטם ראש בדגם הזה?"]},
+"סדק בגוף המנוע":{sev:"high",cost:5,he:"סדק בבלוק המנוע. זה בין הממצאים הקשים ביותר שיכולים להופיע.",ask:["האם המנוע ניתן לתיקון או צריך להחליף?"]},
+"רעש פנימי ממסבים":{sev:"high",cost:5,he:"מסבים בתוך המנוע משמיעים רעש — סימן לבלאי מתקדם. בדרך כלל מוביל לפירוק מנוע.",ask:["כמה זמן אפשר לנסוע לפני שזה מחריף?"]},
+"רעשים במנוע":{sev:"high",cost:4,he:"הבוחן שמע רעש שאינו אמור להיות שם, בלי לקבוע מקור. הטווח כאן עצום — מרצועה רופפת ועד לתקלה פנימית.",ask:["מאיזה אזור הרעש?"],amb:"ניסוח כללי מאוד. חייבים אבחון ממוקד לפני שמעריכים עלות."},
+"תושבות מנוע פגומות":{sev:"med",cost:2,he:"הגומיות שמחזיקות את המנוע לשלדה התבלו. מרגישים את זה כרעידות בסרק. תיקון בינוני ולא דחוף.",ask:["כמה תושבות צריך להחליף?"]},
+"רעש מערכת תזמון":{sev:"high",cost:3,he:"רעש מרצועת או שרשרת התזמון — החלק שמסנכרן את המנוע. אם היא נקרעת בנסיעה, המנוע עלול להיהרס. לא דוחים את זה.",ask:["מתי הוחלפה ערכת תזמון לאחרונה?"]},
+
+/* ---------- קירור ---------- */
+"מיכל עיבוי פגום":{sev:"med",cost:2,he:"המונח הזה משמש בטפסים בשתי משמעויות שונות, ולא תמיד ברור מהטופס באיזו מדובר.",ask:["האם מדובר במעבה המזגן או במיכל של מערכת הקירור?","האם יש נזילה פעילה או רק חלק סדוק?"],amb:"אם הסעיף מופיע ליד הערה על מזגן — כמעט תמיד הכוונה למעבה המזגן, שהוא פריט נפרד ולא מסכן את המנוע. אם הוא מופיע ליד הערה על נזילת מים או התחממות — הכוונה למיכל ההתפשטות של מערכת הקירור, וזה סעיף חשוב יותר. אל תניח לבד — תשאל את הבוחן."},
+"נזילות מים":{sev:"high",cost:2,he:"נוזל קירור דולף. התיקון עצמו לרוב לא יקר, אבל נזילה שמתעלמים ממנה מובילה להתחממות ולנזק במנוע.",ask:["מאיפה בדיוק הנזילה?","האם יש סימנים שהמנוע התחמם בעבר?"]},
+"התחממות יתר במנוע":{sev:"high",cost:3,he:"המנוע התחמם מעבר לטמפרטורת העבודה. זה הסעיף שהכי חשוב לברר לעומק — התחממות עלולה להשאיר נזק קבוע גם אחרי שהסיבה תוקנה.",ask:["האם נבדק אטם הראש אחרי ההתחממות?"]},
+"נזילות מים ממצנן":{sev:"med",cost:2,he:"הרדיאטור עצמו דולף. בדרך כלל מחליפים אותו — חלק סטנדרטי וזמין.",ask:["מקורי או חלופי?"]},
+"נזילה ממשאבת מים":{sev:"med",cost:2,he:"משאבת המים דולפת. חלק תחזוקתי שמתבלה. הרבה פעמים מחליפים אותה יחד עם ערכת התזמון כדי לחסוך עבודה כפולה.",ask:["האם כדאי להחליף יחד עם התזמון?"]},
+"רעש ממשאבת מים":{sev:"med",cost:2,he:"המסב של משאבת המים משמיע רעש — סימן שהיא בדרך להיתקע. עדיף להחליף לפני שהיא נתקעת בנסיעה.",ask:[]},
+"מערכת חימום לקויה":{sev:"low",cost:2,he:"החימום בתא הנוסעים לא עובד כמו שצריך. לא משפיע על המנוע, אבל לפעמים מצביע על חוסר נוזל או על אוויר במערכת.",ask:[]},
+"קיים אויר במערכת הקירור":{sev:"med",cost:1,he:"נכנס אוויר למערכת הקירור. לפעמים זה רק עניין של אוורור המערכת, ולפעמים סימן שנכנסים גזים מהמנוע — וזה כבר סיפור אחר.",ask:["האם נבדק שאין דליפת גזים לקירור?"]},
+"רצועה פגומה":{sev:"med",cost:1,he:"רצועת האביזרים סדוקה או שחוקה. חלק זול שמחליפים בשגרה. אם היא נקרעת — הרכב עוצר.",ask:[]},
+"ניקוי מערכת הקירור":{sev:"low",cost:1,he:"המערכת מלוכלכת ודורשת שטיפה. פעולת תחזוקה, לא ליקוי.",ask:[]},
+
+/* ---------- דלק / גדוש ---------- */
+"תצרוכת דלק גבוהה":{sev:"med",cost:2,he:"הרכב שותה יותר דלק מהצפוי. יכול לנבוע מהמון סיבות, מחיישן ועד למנוע לא בריא.",ask:["איך נמדד?"]},
+"מגדש טורבו לא נבדק":{sev:"info",cost:0,he:"הטורבו לא נכלל בבדיקה הזו. זה לא אומר שהוא תקין או לא תקין — פשוט לא נבדק. בטנדרים ורכבי דיזל זה פריט יקר, אז שווה לבדוק בנפרד.",ask:["אפשר לעשות בדיקת טורבו נפרדת?"]},
+"מדגש טורבו לא תקין":{sev:"high",cost:4,he:"הטורבו לא עובד כשורה. בדיזל זה פריט יקר להחלפה, ולפעמים הוא גם סימן לבעיה אחרת שגרמה לו להיהרס.",ask:["מה גרם לתקלה בטורבו?"]},
+"מערכת הזרקת דלק לא נבדקה":{sev:"info",cost:0,he:"מערכת ההזרקה לא נבדקה. בדיזל מודרני זו מערכת יקרה, ואי-בדיקה שלה משאירה פער משמעותי בתמונה.",ask:["האם אפשר לבדוק מזרקים בנפרד?"]},
+"הזרקת דלק לקויה":{sev:"high",cost:4,he:"מערכת ההזרקה לא עובדת כמו שצריך. במנוע דיזל מזרקים הם פריט יקר.",ask:["כמה מזרקים תקולים?"]},
+"מסנן אויר לקוי":{sev:"low",cost:1,he:"מסנן אוויר מלוכלך. פריט תחזוקה זול שמחליפים בכל טיפול.",ask:[]},
+
+/* ---------- הצתה ---------- */
+"מצתים לא תקינים":{sev:"low",cost:1,he:"המצתים שחוקים. פריט תחזוקה שוטף, זול להחלפה.",ask:[]},
+"מנוע מזייף":{sev:"med",cost:2,he:"אחד הצילינדרים לא שורף כמו שצריך — מרגישים רעידות וחוסר כוח. לרוב מצת או סליל, אבל לפעמים משהו עמוק יותר.",ask:["נעשתה סריקת תקלות ממוחשבת?"]},
+"התנעה קשה":{sev:"med",cost:2,he:"הרכב מתקשה להתניע. יכול להיות מצבר, מתנע, מצתים או מערכת דלק.",ask:["קר או חם? מתי זה קורה?"]},
+"לתאם מנוע":{sev:"low",cost:1,he:"המנוע דורש כיוונון. פעולת תחזוקה שגרתית.",ask:[]},
+
+/* ---------- פליטה ---------- */
+"ממיר קטליטי לא תקין":{sev:"med",cost:3,he:"הממיר הקטליטי (קטליזטור) לא עובד. פריט יקר יחסית, וברוב המקרים בלעדיו הרכב לא עובר טסט.",ask:["האם הרכב יעבור טסט?"]},
+"ריקבון כללי במערכת":{sev:"med",cost:2,he:"מערכת הפליטה חלודה לאורכה. בדרך כלל מחליפים חלקים או את כל המערכת.",ask:["כמה חלקים צריך להחליף?"]},
+"מערכת פליטה רועשת":{sev:"low",cost:2,he:"יש חור או חיבור פתוח במערכת הפליטה. לרוב רעש בלבד, אבל צריך לתקן לפני טסט.",ask:[]},
+"סעפת סדוקה":{sev:"med",cost:3,he:"הסעפת — החלק שמחובר ישירות למנוע — סדוקה. תיקון שדורש עבודה, ובחלק מהמנועים גם הרבה פירוק.",ask:["כמה שעות עבודה?"]},
+
+/* ---------- היגוי ומתלים ---------- */
+"זוויות היגוי (כיוון)":{sev:"low",cost:1,he:"הרכב צריך כיוון פרונט. פעולה זולה ושגרתית — אבל אם היא חוזרת שוב ושוב, זה סימן לבעיה מכנית.",ask:["למה הכיוון יצא מהמקום?"]},
+"סטיות הגה (בנסיעה)":{sev:"safety",cost:2,he:"הרכב מושך לצד בנסיעה. יכול להיות כיוון פשוט, ויכול להיות סימן לפגיעה במבנה. שווה לברר.",ask:["האם זה נובע מכיוון או ממשהו מבני?"]},
+"חופש במערכת היגוי":{sev:"safety",cost:3,he:"יש 'משחק' בהגה — תזוזה שלא מתורגמת לפנייה. סעיף בטיחותי שלא מתעלמים ממנו.",ask:["איזה חלק בדיוק אחראי לחופש?"]},
+"מסבי גלגלים רועשים":{sev:"safety",cost:2,he:"מסב גלגל שחוק ומשמיע רעש. מסב שנתקע בנסיעה מסוכן, אז זה סעיף שמתקנים.",ask:["איזה גלגל?"]},
+"חופש מסבי גלגלים":{sev:"safety",cost:2,he:"מסב הגלגל התרופף. אותו עניין כמו רעש במסבים — סעיף בטיחותי.",ask:["איזה גלגל?"]},
+"גומיות מגן קרועות":{sev:"med",cost:1,he:"הגומייה שמגנה על מפרק קרועה. הפריט עצמו זול, אבל אם נכנס לכלוך למפרק, המפרק עצמו נהרס והתיקון מתייקר. עדיף לטפל מהר.",ask:["האם המפרק עצמו כבר ניזוק?"]},
+"גשר קדמי עקום":{sev:"high",cost:3,he:"חלק מבני במתלה הקדמי מעוקם — כמעט תמיד תוצאה של מכה. שווה לברר מה קרה לרכב.",ask:["האם הרכב היה בתאונה?"]},
+"גשר קדמי סדוק":{sev:"safety",cost:3,he:"סדק בחלק מבני. סעיף בטיחותי שדורש החלפה.",ask:[]},
+"מידות מרכב אינם עפ״י הוראת יצרן":{sev:"high",cost:4,he:"המדידות של מבנה הרכב לא תואמות את המפרט של היצרן. זה בדרך כלל מעיד על תאונה משמעותית שהרכב לא חזר ממנה למידות המקוריות. אחד הסעיפים הכבדים בטופס.",ask:["באיזה מקום המדידה חורגת ובכמה?","האם הרכב עבר יישור במתקן?"]},
+"בולמי זעזועים קדמיים חלשים":{sev:"safety",cost:2,he:"הבולמים הקדמיים איבדו יעילות. משפיע על יציבות ועל מרחק בלימה. מחליפים בזוג, לא בודד.",ask:[]},
+"בולמי זעזועים אחוריים חלשים":{sev:"safety",cost:2,he:"אותו דבר מאחור. גם כאן מחליפים בזוג.",ask:[]},
+"קפיץ קדמי ימני שבור":{sev:"safety",cost:2,he:"קפיץ שבור. סעיף בטיחותי — מחליפים בזוג כדי לשמור על איזון.",ask:[]},
+"קפיץ קדמי שמאלי שבור":{sev:"safety",cost:2,he:"קפיץ שבור. סעיף בטיחותי — מחליפים בזוג.",ask:[]},
+"נזילת שמן במערכת הידראולית":{sev:"med",cost:2,he:"שמן דולף ממערכת ההגה או המתלה ההידראולי. צריך לאתר מקור לפני שמעריכים עלות.",ask:["מאיפה הנזילה?"]},
+
+/* ---------- בלמים ---------- */
+"רפידות שחוקות":{sev:"safety",cost:1,he:"רפידות הבלם התבלו. פריט תחזוקה שגרתי וזול יחסית, אבל בטיחותי — לא נוסעים איתו עד הסוף.",ask:["כמה מ״מ נשארו?"]},
+"צלחות שחוקות":{sev:"safety",cost:2,he:"דיסקיות הבלם שחוקות. בדרך כלל מחליפים יחד עם הרפידות, בזוגות.",ask:["צריך להחליף או אפשר לחרוט?"]},
+"בלימה לקויה":{sev:"safety",cost:2,he:"הבלימה לא עומדת בתקן. זה סעיף שחוסם מעבר טסט ולא נוסעים איתו.",ask:["מה גרם לכשל בבדיקת הבלימה?"]},
+"מערכת ABS אינה פועלת":{sev:"safety",cost:3,he:"מערכת ה-ABS מושבתת. בבלימת חירום זה משנה מאוד. גם חוסם טסט.",ask:["האם זה חיישן בודד או יחידת בקרה?"]},
+"סטיות בבלימה":{sev:"safety",cost:2,he:"הרכב מושך לצד בזמן בלימה. סעיף בטיחותי ברור.",ask:[]},
+"לפרק גלגלים לבדיקה":{sev:"info",cost:0,he:"הבדיקה הזו נעשתה בלי לפרק גלגלים, ולכן הבוחן לא ראה את מצב הרפידות והדיסקיות מקרוב. הוא ממליץ לפרק ולבדוק. זה לא ליקוי — זה פער בבדיקה.",ask:["כמה עולה פירוק גלגלים ובדיקת בלמים?"]},
+"בלם יד אינו תקין":{sev:"safety",cost:2,he:"בלם היד לא מחזיק. חוסם מעבר טסט.",ask:[]},
+"חסר נוזל בלמים":{sev:"safety",cost:1,he:"חסר נוזל בלמים במאגר. בפני עצמו זול, אבל נוזל לא נעלם סתם — לרוב יש נזילה או רפידות שחוקות מאוד.",ask:["למה חסר נוזל? יש נזילה?"]},
+
+/* ---------- צמיגים ---------- */
+"צמיגים לא זהים":{sev:"safety",cost:2,he:"הצמיגים על הרכב לא מאותו סוג או מידה. משפיע על אחיזה ויציבות, ובחלק מהמקרים גם חוסם טסט.",ask:["כמה צמיגים צריך להחליף כדי ליישר?"]},
+"שחיקת צמיגים בינונית":{sev:"med",cost:2,he:"הצמיגים בערך באמצע החיים שלהם. לא ליקוי, אבל הוצאה שתגיע.",ask:["כמה מ״מ סוליה נשארו?"]},
+"צמיגים יבשים":{sev:"safety",cost:2,he:"הגומי התייבש והתקשה מגיל, גם אם יש עוד סוליה. צמיג יבש מאבד אחיזה בייחוד ברטוב.",ask:["מה תאריך הייצור על הצמיגים?"]},
+"מידת צמיגים לא חוקית":{sev:"safety",cost:2,he:"המידה על הרכב לא מאושרת לדגם. חוסם טסט ועלול להשפיע על הביטוח.",ask:["מה המידה המאושרת ברישיון?"]},
+"צמיגים מחודשים":{sev:"med",cost:2,he:"צמיגים ששופצו ולא חדשים. חוקי בחלק מהמקרים אבל נחות מצמיג חדש.",ask:[]},
+"חסר גלגל חילוף":{sev:"low",cost:2,he:"אין גלגל רזרבי ברכב. עניין של נוחות ועלות, לא של בטיחות מיידית.",ask:[]},
+
+/* ---------- חשמל / מצבר / תאורה ---------- */
+"מצבר חלש":{sev:"low",cost:2,he:"המצבר לא מחזיק מתח כמו שצריך. פריט מתכלה — כל מצבר מגיע לזה בסוף. החלפה פשוטה.",ask:["מה גיל המצבר?"]},
+"מצבר אינו מטופל":{sev:"low",cost:1,he:"המצבר לא תוחזק — לא נוקה, לא נבדק. לרוב מדובר בניקוי קטבים, פעולה של דקות.",ask:[]},
+"מצבר פגום":{sev:"low",cost:2,he:"המצבר לא תקין ודורש החלפה. פריט זול יחסית וזמין בכל מוסך.",ask:[]},
+"חופש קוטבי מצבר":{sev:"low",cost:1,he:"החיבורים למצבר רופפים. הידוק וניקוי — פעולה של כמה דקות. אם יש קורוזיה על הקטבים, מנקים אותה באותה הזדמנות.",ask:[]},
+"תאריך ייצור מצבר":{sev:"info",cost:0,he:"הבוחן רשם את תאריך הייצור של המצבר כדי שתדע בן כמה הוא. מצבר טיפוסי מחזיק 3–5 שנים.",ask:[]},
+"אין תאריך ייצור על המצבר":{sev:"info",cost:0,he:"אי אפשר לדעת בן כמה המצבר. לא ליקוי, אבל אי-ודאות.",ask:[]},
+"אלטרנטור רועש":{sev:"med",cost:3,he:"האלטרנטור (שמייצר חשמל ומטעין את המצבר) משמיע רעש. אם הוא נתקע — הרכב נעצר. פריט בעלות בינונית.",ask:["האם צריך אלטרנטור חדש או רק מסבים?"]},
+"אין טעינה":{sev:"high",cost:3,he:"המערכת לא מטעינה את המצבר. הרכב ייסע עד שהמצבר ייגמר ואז ייעצר. חייב תיקון.",ask:[]},
+"מזגן אוויר אינו פועל":{sev:"low",cost:3,he:"המזגן לא עובד. הטווח רחב מאוד — מגז חסר שעולה מעט ועד למדחס שעולה הרבה.",ask:["מה בדיוק לא תקין במזגן?"],amb:"אם מופיע גם 'מיכל עיבוי פגום' בקירור — סביר שהכוונה למעבה המזגן ולא למערכת הקירור של המנוע."},
+"חסר גז במזגן":{sev:"low",cost:1,he:"צריך למלא גז במזגן. זול — אבל גז לא נעלם לבד, לרוב יש נזילה קטנה איפשהו.",ask:["מאיפה הגז דולף?"]},
+"מזגן אוויר מנותק":{sev:"med",cost:3,he:"המזגן נותק מהמערכת. לפעמים כי הוא תקול, ולפעמים כדי להסתיר תקלה. שווה לברר למה.",ask:["למה המזגן נותק?"]},
+"קצרים במערכת חשמל":{sev:"high",cost:2,he:"יש קצר חשמלי. תקלות חשמל קשות לאיתור והעלות תלויה בעיקר בשעות עבודה.",ask:["האם אותר מקור הקצר?"]},
+"פנס חזית שבור":{sev:"safety",cost:2,he:"פנס שבור. חוסם טסט. במכוניות חדשות פנס יכול לעלות הרבה יותר משנדמה.",ask:["מקורי או חלופי? מה המחיר?"]},
+"לתקן אור בלם":{sev:"safety",cost:1,he:"אור הבלם לא עובד. בטיחותי וזול לתיקון — לרוב נורה או מתג.",ask:[]},
+"מערכת מגבים אינה פועלת":{sev:"safety",cost:2,he:"המגבים לא עובדים. חוסם טסט ובטיחותי בגשם.",ask:[]},
+
+/* ---------- הנעה ---------- */
+"מצמד מחליק":{sev:"high",cost:4,he:"המצמד לא מעביר את הכוח כמו שצריך — המנוע עולה בסיבובים אבל הרכב לא מאיץ בהתאם. פריט מתכלה, אבל ההחלפה כרוכה בפירוק ולכן יקרה.",ask:["כמה עולה החלפת מצמד מלאה בדגם הזה?"]},
+"מצמד מפריד גבוה (בלאי)":{sev:"med",cost:4,he:"המצמד 'תופס' גבוה בדוושה — סימן שהוא מתקרב לסוף החיים. עוד לא חייב החלפה מיידית, אבל צריך לתקצב.",ask:["כמה זמן אפשר עוד לנסוע?"]},
+"החלפת הילוכים לקויה":{sev:"high",cost:4,he:"תיבת ההילוכים לא מחליפה כמו שצריך. הטווח עצום — משמן ישן שעולה מעט ועד לשיפוץ תיבה שעולה הרבה. חייב אבחון לפני החלטה.",ask:["האם נעשתה סריקת תקלות של התיבה?","מתי הוחלף שמן גיר לאחרונה?"]},
+"נקישה בשילוב הילוכים":{sev:"high",cost:4,he:"נשמעת נקישה כשהתיבה מחליפה הילוך. אצל תיבה אוטומטית זה סעיף שמצדיק אבחון מעמיק לפני קנייה.",ask:["האם התופעה עקבית או מזדמנת?"]},
+"שמן כהה בלאי דסקיות הילוכים":{sev:"high",cost:5,he:"שמן התיבה כהה — סימן שהדיסקיות בתוכה נשחקות. זה מהסימנים הרציניים בתיבה אוטומטית.",ask:["האם התיבה עוד ניתנת להצלה בהחלפת שמן?"]},
+"החלקה בתאוצה":{sev:"high",cost:5,he:"התיבה מחליקה בהאצה. סימן מובהק לבלאי פנימי. בדרך כלל מוביל לשיפוץ או להחלפת תיבה.",ask:["מה עלות תיבה משופצת לדגם?"]},
+"נזילת שמן תיבת הילוכים":{sev:"med",cost:2,he:"שמן דולף מהתיבה. התיקון עצמו לרוב אטם, אבל אם השמן ירד מתחת למינימום — התיבה נפגעת.",ask:["מאיזה אטם?"]},
+"רעש מתיבת הילוכים":{sev:"high",cost:4,he:"התיבה משמיעה רעש. לרוב מסבים פנימיים, מה שדורש פירוק.",ask:["באיזה הילוך נשמע הרעש?"]},
+"גומיות מגן לציריות פגומות":{sev:"med",cost:2,he:"הגומייה שמגנה על מפרק גל ההינע קרועה. הגומייה זולה — אבל אם נכנס לכלוך, המפרק עצמו נהרס וזה כבר יקר.",ask:["האם המפרק עצמו כבר ניזוק?"]},
+"חופש ונקישות בציריות":{sev:"med",cost:3,he:"מפרקי גל ההינע התרופפו — שומעים נקישות בפנייה. פריט שמחליפים.",ask:["איזה צד?"]},
+"מערכת 4X4 אינה פועלת":{sev:"high",cost:4,he:"ההנעה הכפולה לא עובדת. בטנדר או ברכב שטח זה חלק מהותי משווי הרכב.",ask:["האם התקלה בבקרה או במכניקה?"]},
+"נזילת שמן בדיפרנציאל":{sev:"med",cost:2,he:"שמן דולף מהדיפרנציאל. לרוב אטם. חשוב לתקן לפני שהשמן נגמר.",ask:[]},
+
+/* ---------- מחוונים ---------- */
+"מונה ק״מ פגום":{sev:"high",cost:1,he:"מד הקילומטראז' לא תקין. בפני עצמו התיקון לא יקר — אבל המשמעות היא שאי אפשר לסמוך על הק״מ המוצג, וזה משפיע ישירות על שווי הרכב.",ask:["האם יש היסטוריית ק״מ מטסטים?","מה הק״מ הרשום בטסט האחרון במשרד התחבורה?"]},
+"מד חום פגום":{sev:"med",cost:1,he:"מד החום לא עובד. הבעיה היא שבלעדיו לא תדע אם המנוע מתחמם.",ask:[]},
+"לוח מחוונים פגום":{sev:"med",cost:3,he:"לוח השעונים לא תקין. במכוניות מודרניות זה יכול לדרוש החלפת יחידה שלמה.",ask:[]},
+
+/* ---------- הערות כלליות ---------- */
+"הרכב לא נבדק בנסיעה":{sev:"info",cost:0,he:"הבדיקה נעשתה בחניון בלבד. תקלות שמופיעות רק בנסיעה — רעשים, החלקת תיבה, סטיות — לא היו יכולות להתגלות. זה פער משמעותי בבדיקה.",ask:["אפשר לעשות בדיקת נסיעה נפרדת?"]},
+"מצב כללי ברכב ירוד":{sev:"high",cost:0,he:"הערכה כללית של הבוחן שהרכב במצב לא טוב. זו הערה סובייקטיבית אבל משמעותית — היא משקפת רושם כולל מעבר לסעיפים הבודדים.",ask:["מה הוביל להערכה הזו?"]},
+"לחזור להמשך בדיקה לאחר תיקון":{sev:"info",cost:0,he:"הבדיקה לא הושלמה. משהו מנע מהבוחן לסיים, והוא מבקש לחזור אחרי תיקון. אל תתייחס לטופס הזה כאל תמונה מלאה.",ask:["מה בדיוק מנע השלמת הבדיקה?"]},
+"מס׳ המנוע אינו תואם לרישיון שהוצג בעת הבדיקה":{sev:"high",cost:0,he:"מספר המנוע ברכב שונה מזה שברישיון. זה אומר שהמנוע הוחלף. זה לא בהכרח פסול — אבל חייב להיות רשום כחוק, וזה משפיע על שווי הרכב ועל הביטוח.",ask:["האם החלפת המנוע רשומה במשרד התחבורה?","מה מקור המנוע הנוכחי ומה הק״מ שלו?"]},
+"שינוי מבנה":{sev:"high",cost:0,he:"נעשה שינוי במבנה הרכב. חייב להיות מאושר ורשום. שינוי לא רשום עלול לבטל ביטוח ולחסום טסט.",ask:["האם השינוי מאושר ורשום ברישיון?"]},
+"להוריד ראש מנוע ולחזור לבדיקה":{sev:"high",cost:5,he:"הבוחן חושד במשהו שדורש פתיחת המנוע. זו לא בקשה שגרתית — היא מעידה על חשד לתקלה משמעותית.",ask:["מה החשד הספציפי?"]}
+};
+
+/* מונחים שמופיעים בשדות ההערות החופשיות — לא בנספח 5 */
+const SLANG={
+"משמעות נמוכה":{sev:"low",he:"סיווג רשמי בטופס. אומר שהפגיעה בשלדה היא בחלקים שאינם מבניים — כלומר לא במה שנושא את הרכב. זו הרמה הקלה מבין השתיים."},
+"משמעות גבוהה":{sev:"high",he:"סיווג רשמי בטופס. אומר שהפגיעה נוגעת בחלק מבני של הרכב — משהו שנושא עומס. זו הרמה החמורה, והיא משפיעה מהותית על השווי ועל הבטיחות."},
+"מילוי חומר":{sev:"med",he:"שמו חומר מילוי (מרק/פוליאסטר) כדי ליישר פח במקום להחליף או ליישר אותו. סימן לתיקון קוסמטי שמסתיר מכה."},
+"תיקוני פח וצבע":{sev:"low",he:"הרכב עבר תיקוני פחחות וצבע. נפוץ מאוד ברכב משומש. השאלה החשובה היא לא אם תוקן, אלא איפה ובאיזה היקף."},
+"סימני פתיחה":{sev:"med",he:"הברגים של החלק נפתחו בעבר — כלומר הוא פורק או הוחלף. מעיד על תיקון, ולרוב על מכה שקדמה לו."},
+"הוחלפו חלקי מרכב":{sev:"med",he:"חלקים במרכב הוחלפו. אם מדובר בחלקים מתפרקים (כנף בברגים, דלת, מכסה) — קל יחסית. אם בחלקים מולחמים — משמעותי הרבה יותר."},
+"בועות":{sev:"low",he:"בועות בצבע — לרוב סימן לחלודה שמתפתחת מתחת לצבע, או לתיקון צבע לא מוצלח."},
+"קורוזיה":{sev:"med",he:"חלודה. החומרה תלויה לגמרי במיקום — חלודה שטחית על פח חיצוני היא עניין אחד, חלודה על חלק מבני היא עניין אחר לגמרי."},
+"ריפוד נזוק":{sev:"low",he:"נזק לריפוד הפנימי. עניין אסתטי בלבד."},
+"קורות אורך":{sev:"high",he:"החלקים המבניים שרצים לאורך הרכב ונושאים אותו. פגיעה בהם היא מהממצאים החמורים בטופס."},
+"שאסי":{sev:"high",he:"השלדה הנושאת. בטנדרים ורכבי שטח היא נפרדת מהמרכב. פגיעה בה משמעותית."},
+"לבדוק במוסך מורשה":{sev:"info",he:"הבוחן לא יכול היה לקבוע מסקנה סופית בכלים שעמדו לרשותו, וממליץ על בדיקה נוספת. זה לא ליקוי — זו נקודה פתוחה."},
+"רעש גלגלות":{sev:"med",he:"רעש מהגלגלות שמסובבות את רצועת האביזרים — אלטרנטור, מזגן, משאבת מים. לרוב מותחן או גלגלת שהמסב שלהם התבלה. חלק שנשחק בשגרה, לא יקר, אבל אם רצועה נקרעת בנסיעה הרכב נעצר."},
+"מותחנים":{sev:"med",he:"המותחן שומר על מתיחות רצועת האביזרים. כשהמסב שלו מתבלה נשמע רעש. מחליפים אותו לרוב יחד עם הרצועה והגלגלות."},
+"השהיה בשילוב הילוכים":{sev:"high",he:"התיבה 'חושבת' רגע לפני שהיא תופסת הילוך. בתיבה אוטומטית זו לא תופעה שמתעלמים ממנה — היא יכולה לנבוע משמן ישן, ויכולה לנבוע מבלאי פנימי. הפער בעלות בין שתי האפשרויות עצום, ולכן חייבים אבחון לפני שמחליטים."},
+"בדוק/תקן מזגן":{sev:"low",he:"הבוחן מפנה את המזגן לבדיקה או לתיקון. הטווח רחב — ממילוי גז ועד להחלפת מדחס."},
+"מעיכות":{sev:"low",he:"פחים מעוכים. נזק קוסמטי, אלא אם המעיכה יושבת על חלק מבני."},
+"שריטות":{sev:"low",he:"שריטות בצבע. אסתטי בלבד."},
+"נזק לפגושים":{sev:"low",he:"נזק לפגוש. הפגוש הוא חלק מתפרק ולא מבני — נזק בו לא מעיד על פגיעה בשלדה."},
+"לבדוק במורשה":{sev:"info",he:"הבוחן מפנה לבדיקה נוספת במוסך מורשה. זו נקודה פתוחה, לא ליקוי שנקבע."},
+"לבדוק היסטורית טיפולים":{sev:"info",he:"בקשה לוודא שהרכב טופל לפי הוראות היצרן. שווה לבקש מהמוכר חשבוניות או פלט ממוסך."}
+};
+/* מקורות חיצוניים לכל אבחנה — נאסף מכמה מודלים לצורך השוואה.
+   g = Gemini, k = Grok. e = הסבר, p = טווח מחיר (אם ניתן). */
+const SRC={
+"אין טעינה":{k:{e:"האלטרנטור לא טוען."}},
+"אלטרנטור רועש":{g:{e:"מערכת הטענת החשמל לא עובדת; הרכב יתכבה בנסיעה כשהמצבר יתרוקן.",p:"800 - 2,000 ₪"}},
+"בולמי זעזועים אחוריים חלשים":{k:{e:"הרכב קופץ ולא יציב."}},
+"בולמי זעזועים קדמיים חלשים":{g:{e:"הבולמים גמורים, הרכב 'מתנדנד' בפניות ובחריקות בלם.",p:"1,200 - 3,000 ₪ לזוג"},k:{e:"הרכב קופץ ולא יציב."}},
+"בלאי פנימי גבוה":{g:{e:"שחיקה רצינית של חלקי המנוע הפנימיים כתוצאה מקילומטראז' גבוה או חוסר טיפול.",p:"8,000 - 18,000 ₪ (שיפוץ/החלפה)"},k:{e:"המנוע שחוק מאוד מבפנים (בוכנות, טבעות, קירות צילינדר). סימן שהמנוע קרוב לשיפוץ יקר."}},
+"בלימה לקויה":{k:{e:"הבלמים לא עוצרים טוב."}},
+"בלם יד אינו תקין":{g:{e:"בלם החנייה לא מתוח או כבל קרוע.",p:"250 - 700 ₪"}},
+"ברז מערכת חימום פגום":{g:{e:"חימום תא הנוסעים לא עובד או רדיאטור חימום פנימי דולף.",p:"600 - 3,000 ₪"}},
+"גשר קדמי עקום":{g:{e:"פגיעה פיזית בשלדת המתלה כתוצאה ממכה חזקה או מדרכה.",p:"1,500 - 4,500 ₪"}},
+"דוד עמעם אחורי פגום":{g:{e:"אגזוז מחורר או חלוד, גורם לרעש חזק ולזיהום אוויר.",p:"500 - 1,500 ₪"}},
+"דוושת בלם נמוכה":{g:{e:"אויר במערכת הבלמים או משאבת בלם מרכזית פגומה - סכנת חיים!",p:"400 - 1,800 ₪"}},
+"דיפרנציאל רועש":{k:{e:"רעש מהדיפרנציאל."}},
+"דליפות לחץ בינוניות בצילינדרים":{g:{e:"ירידה בינונית בדחיסת המנוע, מעיד על בלאי מתקדם.",p:"3,000 - 8,000 ₪"}},
+"דליפות לחץ גבוהות בצילינדרים":{g:{e:"אטימה לקויה בצילינדרים; המנוע מאבד כוח בצורה משמעותית.",p:"5,000 - 14,000 ₪"},k:{e:"אין אטימה טובה בין הבוכנה לקיר. המנוע חלש ולא יציב."}},
+"הברגות פגומות בראש מנוע":{g:{e:"הברגת הפלאגים או הברגים בראש המנוע שחוקה/הרוסה.",p:"600 - 2,000 ₪"}},
+"הזרקת דלק לקויה":{g:{e:"אינג'קטורים סתומים או מטפטפים, גורמים לעבודה לא עגולה של המנוע.",p:"1,000 - 4,000 ₪"},k:{e:"בעיה בתערובת דלק-אוויר."}},
+"החלפת הילוכים לקויה":{g:{e:"הגיר האוטומטי מעביר הילוכים במכה, באיחור או בהחלקה.",p:"2,500 - 10,000 ₪"},k:{e:"רעשים, קושי בהעברה, הילוך קופץ."}},
+"הלחמות בבלוק המנוע":{g:{e:"תיקון פחחות חובבני או חיתוך וחיבור של חלקי שלדה - סכנה בטיחותית חמורה!",p:"פסילת רכב / ירידת ערך עצומה"}},
+"הספק מנוע ירוד":{g:{e:"המנוע לא מייצר את הכוח המקורי שלו (בגלל שלל סיבות טכניות).",p:"500 - 4,000 ₪"}},
+"הפעלת חלונות חשמל לקויה":{g:{e:"מנגנון חלון תקוע או מנוע נעילה לא מגיב.",p:"350 - 1,200 ₪"}},
+"הרכב לא נבדק בנסיעה":{g:{e:"הבוחן לא ביצע נסיעת מבחן בכביש (עקב חוסר ביטוח, תקלה קשה או צמיג שטוח).",p:"נדרשת השלמת בדיקה"}},
+"התחממות יתר במנוע":{g:{e:"המנוע מגיע לטמפרטורות מסוכנות; מצריך דיאגנוסטיקה דחופה.",p:"500 - 5,000 ₪"},k:{e:"המנוע מתחמם יותר מדי (סכנה להתקלקלות)."}},
+"התנעה קשה":{g:{e:"הרכב מסתובב הרבה זמן עד שהוא מותנע.",p:"400 - 2,000 ₪"},k:{e:"קשה להניע את הרכב."}},
+"זוויות היגוי (כיוון)":{g:{e:"הרכב מושך לצדדים או שההגה לא ישר; מצריך כיוון פרונט.",p:"250 - 450 ₪"},k:{e:"הכיוון לא מיושר, צמיגים נשחקים לא אחיד."}},
+"חוטי הצתה פגומים":{g:{e:"פלאגים שחוקים או חוטי הצתה פגומים הגורמים לזיוף מנוע.",p:"250 - 800 ₪"}},
+"חוסר שמן במנוע":{g:{e:"כמות שמן נמוכה מהקו התחתון; עלול לנבוע מאי טיפול או אכילת שמן.",p:"100 - 300 ₪ (בדיקה והשלמה)"},k:{e:"אין שמן או מעט מדי."}},
+"חופש במערכת היגוי":{g:{e:"שחיקה במכלול הדיפרנציאל (בעיקר בהנעה אחורית/4X4), גורם לשריקה בנסיעה.",p:"1,500 - 6,000 ₪"},k:{e:"יש משחק בהגה."}},
+"חופש גל ארכובה":{k:{e:"יש משחק בגל הארכובה (חמור)."}},
+"חופש ונקישה בתיבת הגה":{g:{e:"בלאי במנגנון ההיגוי, גורם לחופש בהגה ולנקישות בדרכים משובשות.",p:"1,200 - 3,500 ₪"},k:{e:"יש משחק בהגה."}},
+"חופש ונקישות בציריות":{g:{e:"ציריות שחוקות שמרישות נקישות בסיבוב, או גומיות קרועות שגרמו לגרז לצאת.",p:"350 - 1,800 ₪"},k:{e:"משחק בצירי ההינע (רעשים בנסיעה ובפניות)."}},
+"חופש משולשים במתלה":{g:{e:"גומיות המתלה שחוקות, גורם לדפיקות בבורות ולחוסר יציבות.",p:"600 - 1,800 ₪"}},
+"חסר נוזל בלמים":{g:{e:"דליפה של נוזל בלמים מהצינורות או המשאבות - אובדן כושר בלימה!",p:"350 - 1,200 ₪"},k:{e:"אין נוזל בבלמים."}},
+"כיפוף בחישוק":{g:{e:"ג'אנט חטף מכה מבור/מדרכה, גורם לרעידות בנסיעה ולבריחת אוויר.",p:"250 - 800 ₪"}},
+"לבדוק תצרוכת שמן בנסיעה":{g:{e:"כסות תחת של מכון הבדיקה לגבי אכילת שמן במנוע.",p:"בדיקת מעקב"}},
+"לחזור להמשך בדיקה לאחר תיקון":{g:{e:"מכה בחלק התחתון של הסף או בפח שמתחת לתא המטען.",p:"800 - 2,500 ₪"}},
+"לחץ דחיסה גבוה":{g:{e:"צבירת פיח מוגזמת בתאי השריפה המעלה את היחס הדחיסה פנימה.",p:"600 - 1,500 ₪ (אינפוזיה/ניקוי פיח)"}},
+"לחץ דחיסה לא זהה":{g:{e:"הפרשים בלחצים בין הצילינדרים, גורם לרעידות ולחוסר איזון בפעולת המנוע.",p:"2,000 - 8,000 ₪"}},
+"לחץ דחיסה נמוך":{g:{e:"הקומפרסיה במנוע נמוכה, המנוע חלש ויצרוך יותר דלק.",p:"4,000 - 12,000 ₪"},k:{e:"הצילינדרים לא לוחצים כמו שצריך. אובדן כוח והספק."}},
+"לחץ עוקה גבוה (מבלאי)":{g:{e:"גזים מתאי השריפה בורחים לחלק התחתון של המנוע כתוצאה מבלאי בצילינדרים.",p:"6,000 - 15,000 ₪"},k:{e:"גזים מתאי השריפה בורחים לחלק התחתון של המנוע כתוצאה מבלאי בצילינדרים."}},
+"לחץ שמן נמוך":{g:{e:"משאבת שמן חלשה או מעברים סתומים - סכנה מיידית להריסת המנוע.",p:"1,500 - 4,500 ₪"},k:{e:"לחץ השמן נמוך מדי. עלול להרוס את המנוע תוך זמן קצר."}},
+"מאייד לא תקין":{k:{e:"בעיה בתערובת דלק-אוויר."}},
+"מגדש טורבו לא נבדק":{g:{e:"הטורבו שחוק, מרעיש או זורק שמן, גורם לאובדן כוח משמעותי.",p:"3,000 - 8,000 ₪"},k:{e:"טורבו (אם יש) צריך בדיקה."}},
+"מזגן אוויר אינו פועל":{g:{e:"מדחס תקול, דליפת גז או מאייד תקוע; אין קירור ברכב.",p:"300 - 3,500 ₪"},k:{e:"אין קירור (חסר גז או תקלה)."}},
+"מידת צמיגים לא חוקית":{g:{e:"מידות צמיגים שאינן תואמות את רישיון הרכב (ייכשל בטסט).",p:"1,000 - 2,400 ₪"}},
+"מיכל עיבוי פגום":{g:{e:"פקק הרדיאטור או מיכל העודפים לא שומרים על לחץ נכון.",p:"150 - 400 ₪"}},
+"ממיר קטליטי לא תקין":{g:{e:"הממיר סתום או בלוי; נורית מנוע דולקת, הרכב לא יעבור טסט זיהום אוויר.",p:"1,500 - 4,500 ₪"}},
+"מנוע לאחר תיקון":{g:{e:"החלפת חלקי פח חיצוניים המחוברים בברגים. לרוב נזק קוסמטי בלבד ללא השפעה בטיחותית.",p:"300 - 1,500 ₪ לחלק (ירידת ערך מינורית)"}},
+"מנוע לפני שיפוץ":{g:{e:"המנוע במצב בלאי מתקדם מאוד וזקוק לאוברול כללי או החלפה.",p:"8,000 - 20,000 ₪"},k:{e:"המנוע זקוק לשיפוץ גדול."}},
+"מנוע מזייף":{g:{e:"צילינדר אחד או יותר לא עובד כראוי (Misfire).",p:"300 - 1,500 ₪"},k:{e:"המנוע עובד לא חלק."}},
+"מנוע מצלצל":{g:{e:"שריפה לא מבוקרת של הדלק (צילצולים) המזיקה לבוכנות, נגרמת מדלק לא מתאים או פיח.",p:"400 - 1,500 ₪"}},
+"מנוע נכבה באיחור":{g:{e:"המנוע ממשיך לעבוד מספר שניות לאחר כיבוי הסוויץ' (פיח בתא השריפה/תקלת חשמל).",p:"400 - 1,200 ₪"},k:{e:"המנוע ממשיך לעבוד כמה שניות אחרי שמכבים אותו."}},
+"מנוע שורף שמן":{g:{e:"שמן מנוע נכנס לתאי השריפה ונשרף; מעיד על בלאי בטבעות אטימה (רינגים) או שסתומים.",p:"4,000 - 12,000 ₪"},k:{e:"המנוע צורך כמויות גדולות של שמן. עשן כחול מהאגזוז."}},
+"מסבי גלגלים רועשים":{g:{e:"רעש המהום חזק בנסיעה המתגבר עם המהירות.",p:"450 - 1,200 ₪ לגלגל"}},
+"מס׳ המנוע אינו תואם לרישיון שהוצג בעת הבדיקה":{g:{e:"מספר המנוע המוביל ברכב שונה מהרשום ברישיון הרכב - הרכב לא יעבור טסט!",p:"סידור ניירת / רישוי (200-1,000 ₪)"}},
+"מעבר לחץ למערכת קירור":{g:{e:"גזים מתא השריפה חודרים למי הקירור (לרוב אטם ראש מנוע פרוץ).",p:"3,500 - 8,000 ₪"}},
+"מעיכות אגן שמן":{g:{e:"קרטר השמן חטף מכה מלמטה; עלול לחסום את שאיבת השמן.",p:"500 - 1,400 ₪"}},
+"מערכת ABS אינה פועלת":{g:{e:"נורית ABS דולקת; המערכת למניעת נעילת גלגלים מבוטלת/תקולה.",p:"800 - 3,500 ₪"}},
+"מערכת קירור לקויה":{k:{e:"יש אוויר, קורוזיה או בעיות כלליות."}},
+"מצב כללי ברכב ירוד":{g:{e:"שריטות, מכות חניה, קלופים בצבע ומעכות.",p:"2,000 - 8,000 ₪"}},
+"מצבר חלש":{k:{e:"המצבר לא מחזיק מטען."}},
+"מצבר פגום":{g:{e:"המצבר בסוף חייו, סכנה שלא יניע בבוקר.",p:"450 - 900 ₪"},k:{e:"המצבר לא מחזיק מטען."}},
+"מצמד מאוורר פגום":{g:{e:"מאוורר הקירור לא נכנס לפעולה בזמן או עובד חלש.",p:"600 - 1,800 ₪"}},
+"מצמד מחליק":{k:{e:"המצמד לא מעביר כוח טוב (מחליק תחת עומס)."}},
+"מצמד מפריד גבוה (בלאי)":{g:{e:"קלאץ' שחוק ברכב ידני, ההילוכים עוברים בקשיחות והמנוע 'צורח' בתאוצה.",p:"1,800 - 4,000 ₪"},k:{e:"המצמד לא מעביר כוח טוב."}},
+"מצמד קשה":{k:{e:"קשה ללחוץ את הדוושה."}},
+"מצתים לא תקינים":{k:{e:"מצתים בלויים או שונים."}},
+"מצתים רטובים בשמן":{g:{e:"שמן חודר לאזור הפלאגים (לרוב מבעיית אטם מכסה שסתומים או בלאי עמוק).",p:"400 - 1,500 ₪"}},
+"משאבת דלק פגומה":{g:{e:"משאבת הדלק לא מספקת לחץ מתאים, גורם לקשיים בהתנעה ולחוסר סחב.",p:"800 - 2,200 ₪"},k:{e:"המשאבה לא עובדת כמו שצריך."}},
+"משאבת הגה פגומה":{g:{e:"הגה כוח קשה או מרעיש בעת סיבוב.",p:"800 - 2,200 ₪"}},
+"מתג התנעה פגום":{g:{e:"הסוויץ' השחוק לא מעביר מגע חשמלי תקין למתנע.",p:"400 - 1,200 ₪"}},
+"מתנע פגום-רועש":{g:{e:"הסטרטר מרעיש או לא מסתובב בהתנעה.",p:"600 - 1,500 ₪"}},
+"נוזל קירור בשמן":{g:{e:"מי קירור התערבבו עם שמן המנוע (אטם ראש מנוע שרוף או סדק) - סכנה חמורה!",p:"4,000 - 12,000 ₪"},k:{e:"מים מתערבבים עם שמן (סדק בראש מנוע או אטימה). חמור מאוד."}},
+"נזילה ממשאבת מים":{g:{e:"משאבת המים שחוקה, מרעישה או נוזלת; סכנת התחממות.",p:"700 - 1,800 ₪"},k:{e:"משאבת המים דולפת."}},
+"נזילות מים":{k:{e:"דליפה של נוזל קירור."}},
+"נזילות מים ממצנן":{g:{e:"הרדיאטור חלוד, רקוב או נוזל; עלול לגרום להרס מנוע מחום.",p:"800 - 2,000 ₪"},k:{e:"דליפה של נוזל קירור."}},
+"נזילות שמן":{g:{e:"נזילות מאטמים (אגן שמן, מכסה שסתומים, מחזירי שמן).",p:"500 - 2,500 ₪"},k:{e:"שמן דולף ממקומות שונים (אטמים, אגן וכו')."}},
+"נזילות שמן תיבת הילוכים":{g:{e:"אטמי הגיר דולפים, חוסר שמן עלול להרוס את הגיר.",p:"500 - 1,800 ₪"},k:{e:"שמן דולף מהגיר."}},
+"נזילת שמן תיבת הילוכים":{g:{e:"אטמי הגיר דולפים, חוסר שמן עלול להרוס את הגיר.",p:"500 - 1,800 ₪"},k:{e:"שמן דולף מהגיר."}},
+"סדק בגוף המנוע":{g:{e:"סדק פיזי בבלוק המנוע; לרוב מחייב החלפת מנוע מלאה.",p:"8,000 - 20,000 ₪"},k:{e:"סדק בבלוק — כמעט בלתי הפיך."}},
+"סטיות בבלימה":{g:{e:"צלחות בלם מעוותות (זריקה) גורמות לרעידות בהגה בעת לחיצה על הבלם.",p:"500 - 1,100 ₪"}},
+"סטיות הגה (בנסיעה)":{k:{e:"הכיוון לא מיושר, צמיגים נשחקים לא אחיד."}},
+"סימני דליפה בין ראש מנוע והבלוק":{g:{e:"אטם ראש מנוע שרוף/בלוי, גורם לנזילת שמן או מים מחבור הראש והבלוק.",p:"3,500 - 7,500 ₪"}},
+"סימני מים בנשם מנוע":{g:{e:"טחינה/קצף על פקק השמן או הנשם; מעיד על חדירת נוזל קירור לשמן.",p:"3,500 - 8,000 ₪"}},
+"סעפת סדוקה":{g:{e:"ריח גזים בתא הנוסעים ורעש פליטה מתחת למכסה המנוע.",p:"800 - 2,500 ₪"}},
+"פולי מנוע זורק":{g:{e:"גלגלת מנוע (פולי) יצאה מאיזון או משוחררת, מה שעלול להרוס רצועות.",p:"600 - 1,400 ₪"},k:{e:"גלגלת מנוע (פולי) יצאה מאיזון או משוחררת, מה שעלול להרוס רצועות."}},
+"פין מרכזי לקפיצים שבור":{k:{e:"הקפיצים קרועים או שבורים."}},
+"פנס חזית שבור":{g:{e:"תאורה פגומה, ירוד בראות לילה ולא עובר טסט.",p:"300 - 1,500 ₪"}},
+"פנסים אחוריים פגומים":{k:{e:"אורות לא עובדים."}},
+"פקקי מים פגומים":{g:{e:"פקקי הבלוק אכולים מקורוזיה ודולפים נוזל קירור.",p:"800 - 2,500 ₪ (תלוי נגישות)"}},
+"צינור נשם מנותק":{g:{e:"צינור שאחראי על שחרור אדים מהמנוע מנותק או קרוע, יגרום לנזילות ולזיהום.",p:"150 - 400 ₪"}},
+"צינורות דלק פגומים":{g:{e:"דליפת דלק מצנרת או ממיכל הדלק - סכנת שריפה מיידית!",p:"400 - 2,500 ₪"}},
+"צינורות מים פגומים":{g:{e:"צינורות רדיאטור יבשים, תפוחים או סדוקים העומדים להתפוצץ.",p:"250 - 700 ₪"}},
+"צלחות שחוקות":{g:{e:"שחיקה טבעית של חומרי הבלם; ירידה באיכות הבלימה ורעשי שחיקה.",p:"400 - 1,200 ₪ לסרן"},k:{e:"בלמים נשחקו."}},
+"צמיגים יבשים":{g:{e:"הצמיגים ישנים, סדוקים או שחוקים; מרחק הבלימה גדל וסכנת החלקה.",p:"1,000 - 2,400 ₪ (לרביעייה)"}},
+"קורוזיה בית תרמוסטט":{g:{e:"בית התרמוסטט אכול מחלודה/אבנית או תקוע, מונע מעבר מים תקין.",p:"400 - 1,100 ₪"}},
+"קורות אורך":{g:{e:"פגיעת שלדה קשה מקדימה או מאחור; משפיע לרעה על בטיחות הרכב וירידת ערך מסחרית קשה (15%-30%+).",p:"ירידת ערך של עשרות אלפי שקלים"},k:{e:"פגיעה במבנה הבסיסי של הרכב. מסוכן ויקר לתיקון."}},
+"קפיץ קדמי ימני שבור":{g:{e:"קפיץ מתלה שבור - מסוכן מאוד לנסיעה!",p:"600 - 1,500 ₪"},k:{e:"הקפיצים קרועים או שבורים."}},
+"קפיץ קדמי שמאלי שבור":{k:{e:"הקפיצים קרועים או שבורים."}},
+"רטיבות שמן במסנן אויר":{g:{e:"שמן מנוע מגיע לפילטר האוויר בגלל לחץ פנימי גבוה או נשם סתום.",p:"300 - 900 ₪"},k:{e:"שמן מגיע למסנן האוויר (בעיה באטימה)."}},
+"ריח דלק בתא נוסעים":{k:{e:"דליפה — גם מסוכן (ריח + סכנת שריפה)."}},
+"ריקבון במצנן":{k:{e:"המצנן חלוד ומתפרק."}},
+"רעש ממשאבת מים":{k:{e:"המשאבה רועשת (קרובה להחלפה)."}},
+"רעש מערכת שסתומים":{g:{e:"נקישות מהחלק העליון של המנוע כתוצאה מבלאי בשסתומים או במרימים הידראוליים.",p:"1,200 - 3,500 ₪"}},
+"רעש מערכת תזמון":{g:{e:"רצועת/שרשרת טיימינג משוחררת או שחוקה; מחייב טיפול מיידי למניעת הרס מנוע.",p:"1,500 - 4,500 ₪"},k:{e:"רעשים מהשסתומים או משרשרת התזמון."}},
+"רעש מערכת תזמון ושסתומים":{k:{e:"רעשים מהשסתומים או משרשרת התזמון."}},
+"רעש מתיבת הילוכים":{k:{e:"רעשים, קושי בהעברה, הילוך קופץ."}},
+"רעש פנימי ממסבים":{k:{e:"יש בעיה מכנית (מסבים, גל זיזים, גל ארכובה). יכול להוביל לתקלה גדולה."}},
+"רעשים במנוע":{k:{e:"יש בעיה מכנית (מסבים, גל זיזים, גל ארכובה). יכול להוביל לתקלה גדולה."}},
+"רעשים ונקישות פנימיים":{g:{e:"רעשי מתכת מתוך המנוע ממיסבי גל ארכובה/טלטלים; נזק קשה.",p:"6,000 - 16,000 ₪"},k:{e:"יש בעיה מכנית (מסבים, גל זיזים, גל ארכובה). יכול להוביל לתקלה גדולה."}},
+"רפידות שחוקות":{g:{e:"שחיקה טבעית של חומרי הבלם; ירידה באיכות הבלימה ורעשי שחיקה.",p:"400 - 1,200 ₪ לסרן"},k:{e:"בלמים נשחקו."}},
+"שחיקת צמיגים":{k:{e:"צמיגים נשחקים לא אחיד."}},
+"שחיקת צמיגים בינונית":{k:{e:"צמיגים נשחקים לא אחיד."}},
+"שמן כהה בלאי דסקיות הילוכים":{g:{e:"שמן גיר שרוף ולא מטופל, מעיד על בלאי פנימי במכלולי התיבה.",p:"600 - 8,000 ₪ (מטיפול עד שיפוץ)"}},
+"שריפות שמן ממובילי שסתומים":{g:{e:"איטום שסתומים בלוי שגורם לשמן להיכנס לתא השריפה ולצידוי עשן כחול.",p:"2,500 - 5,000 ₪"},k:{e:"שמן דולף דרך מובילי השסתומים ונשרף. גורם לצריכת שמן גבוהה."}},
+"תושבות מנוע פגומות":{g:{e:"תושבות הגומי קרועות/יבשות, גורם לרעידות חזקות בתוך תא הנוסעים.",p:"800 - 2,200 ₪"}},
+"תושבת תיבת הילוכים פגומה":{g:{e:"תושבת גיר קרועה גורמת לנקישות במעבר בין הילוכים/במכות גז.",p:"450 - 1,200 ₪"}},
+"תיבת הילוכים פגומה":{k:{e:"רעשים, קושי בהעברה, הילוך קופץ."}},
+"תצרוכת דלק גבוהה":{g:{e:"הרכב צורך יותר דלק מהנורמה עקב חיישן תקול, מזרקים מלוכלכים או פילטר סתום.",p:"300 - 2,000 ₪"},k:{e:"אוכל יותר דלק מהרגיל."}}
+};
+/* =====================================================================
+   AutoClear v1.0.0 — AppNest
+   ===================================================================== */
+const VER="1.3.0";
+
+
+/* ---------------- storage ---------------- */
+const store={
+  get(k,d){try{const v=localStorage.getItem("ac_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("ac_"+k,JSON.stringify(v));return true}
+    catch(e){toast(T("saveFail"));return false}},
+  del(k){try{localStorage.removeItem("ac_"+k)}catch(e){}}
+};
+
+/* ---------------- language ---------------- */
+const LANG={
+he:{dir:"rtl",name:"עברית",
+ sub:"מסביר טופס בדיקת רכב",
+ gateH:"לפני שמתחילים", gateS:"חשוב שתקרא את זה. זה לוקח חצי דקה.",
+ g1:"<b>זו לא חוות דעת מקצועית.</b> האפליקציה רק מסבירה במילים פשוטות מה כתוב בטופס שאתה מזין. היא לא בדקה את הרכב, לא ראתה אותו, ואין לה שום דרך לדעת מה מצבו האמיתי.",
+ g2:"<b>המחירים הם להמחשה בלבד.</b> הם טווחים כלליים שנאספו מהרשת ואינם הצעת מחיר. המחיר הקובע הוא הצעה כתובה ממוסך מורשה בלבד.",
+ g3:"<b>ההסבר מבוסס רק על מה שאתה מזין.</b> אם ההזנה שגויה או חלקית — גם ההסבר יהיה כזה. האפליקציה לא מחליפה בדיקה, לא ממליצה אם לקנות, ולא נותנת ציון לרכב.",
+ g4:"<b>למפתחי האפליקציה אין שום קשר</b> לרכב הנבדק, למכון הבדיקה, לבוחן או למוסך כלשהו. הנתונים שלך נשמרים על המכשיר בלבד ולא עוברים לשום שרת שלנו.",
+ gateCk:"קראתי והבנתי. אני מבין שזה כלי הסבר בלבד ושכל החלטה על קנייה היא באחריותי.",
+ gateGo:"הבנתי — כניסה לאפליקציה",
+ homeH:"מה בטופס שלך?", homeS:"בחר איך להתחיל",
+ b1:"הזנת טופס הבדיקה", t1:"עוברים סעיף-סעיף ומקבלים הסבר מלא בשפה פשוטה",
+ b2:"מילון ליקויים", t2:"חיפוש מהיר של סעיף בודד — מה זה אומר בפועל",
+ b3:"פרטי רכב לפי מספר", t3:"נתונים ממאגר משרד התחבורה הפתוח",
+ b4:"חיבור בינה מלאכותית", t4:"אופציונלי. האפליקציה עובדת מצוין גם בלי",
+ b5:"הגדרות", t5:"שפה, עיצוב, גיבוי ופרטיות",
+ homeNote:"<b>איך זה עובד?</b> כל הסבר בא ממילון קבוע שנבנה מראש לפי נוסח האבחנות של משרד התחבורה. הבינה המלאכותית היא תוספת אופציונלית — היא לא מחליטה כלום, רק עוזרת לנסח.",
+ fmH:"הזנת הטופס", fmS:"סמן כל סעיף כמו שמופיע בטופס שבידך",
+ fmL0:"סוג הטופס", fmH0:"אם הטופס שלך כולל סעיפים על מערכות ממוחשבות — בחר נספח 1.",
+ fmLp:"מספר רכב", fmLk:"קילומטראז'", fmLc:"מכון הבדיקה",
+ fmRows:"סעיפי הטופס", fmRun:"הסבר לי את הטופס",
+ fmOk:"תקין", fmBad:"לא תקין", fmNo:"לא סומן",
+ fmPick:"בחר אבחנות", fmNote:"הערת הבוחן (העתק מהטופס)", fmSel:"נבחרו",
+ rsH:"מה הטופס אומר", rsS:"הסבר לפי מה שהזנת — ותו לא",
+ rsPrint:"הדפסה / PDF", rsShare:"שיתוף", rsAi:"נסח לי מחדש עם AI",
+ dcH:"מילון ליקויים", dcS:"חפש סעיף מהטופס וקבל הסבר",
+ dcQ:"הקלד מילה מהטופס — למשל: מצבר, בלמים, נזילה",
+ plH:"פרטי רכב", plS:"מהמאגר הפתוח של משרד התחבורה",
+ plL:"מספר רישוי", plGo:"חפש",
+ plHint:"החיפוש מול data.gov.il. אם הדפדפן חוסם את הפנייה — הזן כתובת proxy בהגדרות.",
+ aiH:"חיבור בינה מלאכותית", aiS:"לגמרי אופציונלי",
+ aiNote:"<b>המפתח נשמר על המכשיר שלך בלבד</b> ונשלח רק לספק שבחרת. בלי חיבור — האפליקציה עובדת על מילון מקומי, גם בלי אינטרנט. עם חיבור — ההסבר מנוסח בצורה זורמת יותר וסעיפים שאין להם ערך במילון מקבלים הסבר.",
+ aiSave:"שמור וחבר", aiTest:"בדיקת חיבור",
+ aiExtL:"בלי מפתח? יש דרך אחרת", aiExtD:"אפשר להעתיק את הטקסט של הטופס ולהדביק אותו באפליקציית AI שכבר מותקנת אצלך בטלפון — Claude, ChatGPT או Gemini. האפליקציה תכין לך את הטקסט מוכן.",
+ aiExtB:"הכן טקסט לשליחה",
+ stH:"הגדרות", stLu:"שם משתמש", stHu:"מופיע בכל ייצוא ושיתוף כדי שיידעו ממי המסמך",
+ stLp:"כתובת proxy (אופציונלי)", stHp:"רק אם חיפוש מספר רכב נחסם בדפדפן",
+ stLb:"גיבוי", stExp:"ייצוא גיבוי", stImp:"שחזור",
+ stLd:"מחיקה", stDel:"מחק את כל הנתונים", stHd:"פעולה בלתי הפיכה. תתבקש לאשר פעמיים.",
+ back:"חזרה לדף הבית", back2:"חזרה לטופס",
+ ver:"גרסה "+VER, guide:"מדריך", about:"אודות", priv:"פרטיות",
+ saveFail:"השמירה נכשלה — ייתכן שהאחסון מלא",
+ noRows:"לא סימנת אף סעיף כלא תקין. אם זה נכון — מצוין. אם פספסת, חזור ותסמן.",
+ sevSafety:"בטיחותי", sevHigh:"משמעותי", sevMed:"בינוני", sevLow:"קל", sevInfo:"נקודה פתוחה",
+ catAsk:"מה כדאי לשאול", catAmb:"ניסוח לא חד-משמעי", catCost:"טווח להמחשה בלבד",
+ sumH:"תמונת מצב", sumBad:"סעיפים שסומנו לא תקינים", sumOk:"סעיפים תקינים",
+ sumSafety:"מתוכם בטיחותיים", sumCost:"סך אומדן להמחשה",
+ sumNoScore:"האפליקציה לא נותנת לרכב ציון ולא ממליצה אם לקנות. הנתונים למטה הם מה שכתוב בטופס שלך, מתורגם לשפה פשוטה.",
+ openQ:"שאלות לשאול את הבוחן או את המוכר",
+ ambH:"סעיפים שצריך לברר איך בדיוק התכוונו",
+ aiOn:"מחובר", aiOff:"לא מחובר", copied:"הועתק", done:"בוצע",
+ delAsk1:"למחוק את כל הנתונים?", delAsk2:"בטוח? אין דרך לשחזר.",
+ notFound:"לא נמצא רכב במאגר עם המספר הזה",
+
+ b0:"צלם את הטופס", t0:"צילום של רישיון הרכב וטופס הבדיקה — האפליקציה קוראת ומסבירה",
+ scH:"צילום המסמכים", scS:"שני צילומים, והאפליקציה עושה את השאר",
+ scL1:"רישיון הרכב", scD1:"כדי להצליב את הפרטים מול מאגר משרד התחבורה ולהתריע על הפרשים",
+ scB1:"צלם רישיון רכב",
+ scL2:"טופס הבדיקה", scD2:"אפשר עד 4 תמונות אם הטופס נמשך על כמה עמודים. צלם ישר מלמעלה, באור טוב, בלי צל",
+ scB2:"צלם את הטופס",
+ scGo:"סרוק והסבר לי",
+ scS1:"קורא את רישיון הרכב", scS2:"מצליב מול משרד התחבורה",
+ scS3:"קורא את טופס הבדיקה", scS4:"מתאים לרשימת האבחנות הרשמית",
+ scNoImg:"צרף לפחות תמונה אחת",
+ scFail:"אפשר לנסות שוב עם צילום ברור יותר, או להזין ידנית.",
+ scPriv:"<b>שים לב:</b> הצילומים נשלחים לספק ה-AI שבחרת בהגדרות כדי להיקרא. רישיון רכב וטופס בדיקה מכילים פרטים אישיים — שלך, של בעל הרכב ושל הבוחן. הצילומים לא נשמרים אצלנו ולא עוברים בשום שרת שלנו.",
+ needVision:"לקריאת תמונות צריך ספק שתומך בזה — Gemini, Claude, ChatGPT או כתובת מותאמת. מודל מקומי לרוב לא יקרא טופס בעברית.",
+ rvH:"מה נקרא מהמסמכים", rvS:"עבור על זה לפני שממשיכים — הקריאה אוטומטית ולא תמיד מדויקת",
+ rvId:"זיהוי הרכב", rvForm:"טופס הבדיקה",
+ rvDiff:"נמצאו %n הפרשים בין רישיון הרכב למאגר משרד התחבורה",
+ rvSame:"הפרטים ברישיון תואמים את מאגר משרד התחבורה",
+ rvNoMot:"לא נמצא רכב במאגר לפי המספר שנקרא מהרישיון. ייתכן שהמספר לא נקרא נכון, או שהפנייה למאגר נחסמה בדפדפן.",
+ rvEng:"מספר מנוע נקרא מהרישיון אך אינו מופיע במאגר הפתוח ולכן לא ניתן להצליב אותו. שווה להשוות ידנית למספר המוטבע על המנוע.",
+ rvCheck:"השווה מול הטופס שבידך. כל שגיאה כאן תגלגל שגיאה להסבר.",
+ rvUnm:"%n שורות טקסט לא הותאמו לרשימת האבחנות הרשמית",
+ rvWarn:"<b>הקריאה נעשתה על ידי בינה מלאכותית ועלולה לטעות.</b> הטופס המקורי הוא הקובע. אם משהו כאן לא תואם למה שכתוב אצלך — תקן ידנית לפני שתמשיך.",
+ rvGo:"הסבר לי את הליקויים", rvEdit:"תקן ידנית", rvBk:"חזרה לצילום",
+ catMine:"מהמחירון שטענת",
+ rawWas:"בטופס נכתב:",
+ srcN:"מקורות", srcCompare:"השוואה בין מקורות — כשהם מסכימים זה מחזק, כשחלוקים שווה לשאול מוסך",
+ srcDisc:"כל מקור הוא דעה עצמאית. ההסברים והמחירים אינם מחייבים ואינם מהווים חוות דעת מקצועית.",
+ liveH:"שאל עוד מקורות", liveAsk:"שלח את הליקוי למודל נוסף וקבל דעה עצמאית",
+ liveRun:"שאל את המודל המחובר", liveWait:"שולח לכל המקורות...",
+ rawH:"מה שכתוב בטופס, מילה במילה",
+ rawD:"הטקסט המקורי כפי שנקרא מהטופס. אם משהו כאן לא קיבל הסבר למעלה — זה אומר שהאפליקציה לא זיהתה אותו, לא שהוא לא חשוב. שאל עליו את הבוחן.",
+ prLoad:"טעינת מחירון", prHint:"קובץ JSON בפורמט {\"שם האבחנה\":\"טווח מחיר\"}. בלי מחירון מוצגים סדרי גודל במילים בלבד.",
+
+ abApp:"אפליקציה", abVer:"גרסה", abDev:"פותח", abPlat:"פלטפורמה",
+ abStore:"אחסון נתונים", abStoreV:"על המכשיר בלבד", abLic:"רישיון",
+ abDesc:"AutoClear מסבירה בשפה פשוטה את טופס בדיקת הרכב לפני קנייה, ומצליבה את פרטי הרכב מול מאגר משרד התחבורה. נוסח הליקויים לקוח מנספח 5 להוראת נוהל 127. האפליקציה אינה קשורה למשרד התחבורה, למכוני בדיקה או למוסכים, ואינה מהווה חוות דעת מקצועית.",
+ abShare:"שתף את האפליקציה", abFeedback:"שלח משוב", abStoreLink:"חנות AppNest",
+ privBody:"<b>הכול נשמר על המכשיר בלבד.</b> אין חשבון, אין שרת, איננו אוספים נתונים ואין מעקב, אנליטיקה או פרסום.<br><br>"+
+   "<b>מה נשלח החוצה, ורק אם תבחר בכך:</b><br>"+
+   "· <b>חיפוש מספר רכב</b> — מספר הרישוי נשלח למאגר הפתוח של משרד התחבורה (data.gov.il).<br>"+
+   "· <b>קריאת מסמכים והסבר עם בינה</b> — הצילומים או הטקסט נשלחים ישירות לספק ה-AI שבחרת בהגדרות. מפתח ה-API נשמר על המכשיר בלבד ואינו עובר דרך שום שרת של AppNest.<br><br>"+
+   "<b>מצלמה.</b> הצילום נעשה במכשיר. תמונה יוצאת החוצה רק כשאתה מפעיל את פעולת הסריקה, ורק לספק שבחרת.<br><br>"+
+   "<b>פרטי צד שלישי.</b> רישיון רכב וטופס בדיקה מכילים פרטים של אנשים אחרים — בעל הרכב, הבוחן, מספר רישיון ומספר שלדה. כשאתה שולח אותם לבינה, הפרטים האלה יוצאים איתם. שקול להסתיר אותם קודם.<br><br>"+
+   "<b>שליטה מלאה.</b> גיבוי, ייצוא ומחיקה מלאה זמינים בהגדרות. \"מחק את כל הנתונים\" מוחק הכול מיידית.<br><br>"+
+   "<b>אינו חוות דעת מקצועית.</b> כל ההסברים, ההערכות והמחירים הם להמחשה בלבד ואינם מחייבים.<br><br>"+
+   "יצירת קשר: appnest55@gmail.com",
+ aiLed:"סטטוס בינה",
+ searching:"מחפש...", err:"שגיאה: "},
+
+en:{dir:"ltr",name:"English",
+ sub:"Vehicle inspection form, explained",
+ gateH:"Before you start", gateS:"Please read this. It takes 30 seconds.",
+ g1:"<b>This is not a professional opinion.</b> The app only explains, in plain words, what the form you enter says. It has not inspected the vehicle, has never seen it, and has no way of knowing its actual condition.",
+ g2:"<b>Prices are illustrative only.</b> They are general ranges collected from the web and are not a quote. Only a written quote from a licensed garage is binding.",
+ g3:"<b>The explanation is based only on what you enter.</b> Wrong or partial input means a wrong or partial explanation. This app does not replace an inspection, does not recommend whether to buy, and does not score the vehicle.",
+ g4:"<b>The developers have no connection</b> to the vehicle, the inspection centre, the inspector or any garage. Your data stays on your device and never reaches a server of ours.",
+ gateCk:"I have read and understood. This is an explanation tool only, and any purchase decision is mine.",
+ gateGo:"Understood — enter the app",
+ homeH:"What's on your form?", homeS:"Choose where to start",
+ b1:"Enter the inspection form", t1:"Go item by item and get a full plain-language explanation",
+ b2:"Defect dictionary", t2:"Look up a single item — what it actually means",
+ b3:"Vehicle details by plate", t3:"From the Ministry of Transport open data",
+ b4:"Connect an AI", t4:"Optional. The app works fine without one",
+ b5:"Settings", t5:"Language, theme, backup and privacy",
+ homeNote:"<b>How it works:</b> every explanation comes from a fixed dictionary built around the Ministry of Transport's official diagnosis wording. AI is an optional extra — it decides nothing, it only helps with phrasing.",
+ fmH:"Enter the form", fmS:"Mark each item exactly as it appears on your form",
+ fmL0:"Form type", fmH0:"If your form includes computerised-system items, pick Annex 1.",
+ fmLp:"Plate number", fmLk:"Odometer", fmLc:"Inspection centre",
+ fmRows:"Form items", fmRun:"Explain my form",
+ fmOk:"OK", fmBad:"Not OK", fmNo:"Unmarked",
+ fmPick:"Pick findings", fmNote:"Inspector's note (copy from form)", fmSel:"selected",
+ rsH:"What your form says", rsS:"Based on what you entered — nothing more",
+ rsPrint:"Print / PDF", rsShare:"Share", rsAi:"Rephrase with AI",
+ dcH:"Defect dictionary", dcS:"Search an item from your form",
+ dcQ:"Type a word — e.g. battery, brakes, leak",
+ plH:"Vehicle details", plS:"From the Ministry of Transport open dataset",
+ plL:"Plate number", plGo:"Search",
+ plHint:"Queries data.gov.il directly. If your browser blocks it, set a proxy URL in Settings.",
+ aiH:"Connect an AI", aiS:"Entirely optional",
+ aiNote:"<b>Your key stays on your device</b> and is sent only to the provider you choose. Without a connection the app runs on a local dictionary, even offline. With one, the wording flows better and unmatched items get an explanation.",
+ aiSave:"Save & connect", aiTest:"Test connection",
+ aiExtL:"No key? There's another way", aiExtD:"Copy the form text and paste it into an AI app already on your phone — Claude, ChatGPT or Gemini. The app prepares the text for you.",
+ aiExtB:"Prepare text to send",
+ stH:"Settings", stLu:"User name", stHu:"Appears on every export and share so people know who sent it",
+ stLp:"Proxy URL (optional)", stHp:"Only if plate lookup is blocked in your browser",
+ stLb:"Backup", stExp:"Export backup", stImp:"Restore",
+ stLd:"Delete", stDel:"Delete all data", stHd:"Irreversible. You'll be asked to confirm twice.",
+ back:"Back to home", back2:"Back to form",
+ ver:"Version "+VER, guide:"Guide", about:"About", priv:"Privacy",
+ saveFail:"Save failed — storage may be full",
+ noRows:"You didn't mark any item as faulty. If that's right — great. If you missed some, go back.",
+ sevSafety:"Safety", sevHigh:"Significant", sevMed:"Moderate", sevLow:"Minor", sevInfo:"Open question",
+ catAsk:"What to ask", catAmb:"Ambiguous wording", catCost:"Illustrative range only",
+ sumH:"Overview", sumBad:"Items marked faulty", sumOk:"Items marked OK",
+ sumSafety:"of which safety-related", sumCost:"Illustrative total",
+ sumNoScore:"This app gives no score and no buy/don't-buy recommendation. Below is what your form says, in plain words.",
+ openQ:"Questions for the inspector or seller",
+ ambH:"Items where the wording needs clarifying",
+ aiOn:"Connected", aiOff:"Not connected", copied:"Copied", done:"Done",
+ delAsk1:"Delete all data?", delAsk2:"Sure? This cannot be undone.",
+ notFound:"No vehicle found with that number",
+
+ b0:"Photograph the form", t0:"Snap the vehicle licence and the inspection form — the app reads and explains",
+ scH:"Photograph the documents", scS:"Two photos, the app does the rest",
+ scL1:"Vehicle licence", scD1:"Used to cross-check against the Ministry of Transport registry and flag differences",
+ scB1:"Photograph licence",
+ scL2:"Inspection form", scD2:"Up to 4 photos if the form runs over several pages. Shoot straight on, good light, no shadow",
+ scB2:"Photograph the form",
+ scGo:"Scan and explain",
+ scS1:"Reading the vehicle licence", scS2:"Cross-checking the registry",
+ scS3:"Reading the inspection form", scS4:"Matching the official finding list",
+ scNoImg:"Add at least one photo",
+ scFail:"Try again with a clearer photo, or enter it manually.",
+ scPriv:"<b>Note:</b> photos are sent to the AI provider you chose in Settings so they can be read. A licence and an inspection form contain personal data — yours, the owner's and the inspector's. We do not store them and they never pass through a server of ours.",
+ needVision:"Reading images needs a provider that supports it — Gemini, Claude, ChatGPT or a custom endpoint. A local model usually will not read a Hebrew form.",
+ rvH:"What was read", rvS:"Check this before continuing — reading is automatic and not always accurate",
+ rvId:"Vehicle identity", rvForm:"Inspection form",
+ rvDiff:"%n differences between the licence and the registry",
+ rvSame:"The licence matches the registry",
+ rvNoMot:"No vehicle found for the plate read from the licence. The number may have been misread, or the request was blocked.",
+ rvEng:"An engine number was read from the licence but is not in the open registry, so it cannot be cross-checked. Worth comparing manually to the number stamped on the engine.",
+ rvCheck:"Compare against the form in your hand. Any error here carries into the explanation.",
+ rvUnm:"%n text lines could not be matched to the official finding list",
+ rvWarn:"<b>This was read by AI and can be wrong.</b> The original form is what counts. Fix anything that does not match before continuing.",
+ rvGo:"Explain the findings", rvEdit:"Fix manually", rvBk:"Back to photos",
+ catMine:"From your price list",
+ rawWas:"The form says:",
+ srcN:"sources", srcCompare:"Compare sources — agreement strengthens, disagreement is worth asking a garage about",
+ srcDisc:"Each source is an independent opinion. Explanations and prices are not binding and are not a professional opinion.",
+ liveH:"Ask more sources", liveAsk:"Send the finding to another model for an independent opinion",
+ liveRun:"Ask the connected model", liveWait:"Querying all sources...",
+ rawH:"What the form says, verbatim",
+ rawD:"The original text as read from the form. Anything here without an explanation above simply was not recognised — that does not make it unimportant. Ask the inspector about it.",
+ prLoad:"Load price list", prHint:"JSON file shaped {\"finding name\":\"price range\"}. Without one, only word-level magnitudes are shown.",
+
+ abApp:"Application", abVer:"Version", abDev:"Developer", abPlat:"Platform",
+ abStore:"Data storage", abStoreV:"On device only", abLic:"Licence",
+ abDesc:"AutoClear explains a pre-purchase vehicle inspection form in plain language and cross-checks the vehicle details against the Ministry of Transport registry. Finding wording is drawn from Annex 5 of Directive 127. The app is not affiliated with the Ministry, inspection centres or garages, and is not a professional opinion.",
+ abShare:"Share the app", abFeedback:"Send feedback", abStoreLink:"AppNest store",
+ privBody:"<b>Everything is stored on your device only.</b> No account, no server, we collect nothing, and there is no tracking, analytics or advertising.<br><br>"+
+   "<b>What leaves the device, and only if you choose:</b><br>"+
+   "· <b>Plate lookup</b> — the plate number is sent to the Ministry of Transport open dataset (data.gov.il).<br>"+
+   "· <b>Document reading and AI explanation</b> — photos or text are sent directly to the AI provider you chose in Settings. Your API key stays on the device and never passes through an AppNest server.<br><br>"+
+   "<b>Camera.</b> Capture happens on the device. An image leaves only when you run the scan, and only to the provider you chose.<br><br>"+
+   "<b>Third-party data.</b> A licence and an inspection form contain other people's details — the owner, the inspector, a licence number and a VIN. When you send them to an AI they go too. Consider redacting first.<br><br>"+
+   "<b>Full control.</b> Backup, export and full deletion are in Settings. \"Delete all data\" wipes everything immediately.<br><br>"+
+   "<b>Not a professional opinion.</b> All explanations, estimates and prices are illustrative and not binding.<br><br>"+
+   "Contact: appnest55@gmail.com",
+ aiLed:"AI status",
+ searching:"Searching...", err:"Error: "},
+
+ru:{dir:"ltr",name:"Русский",sub:"Отчёт о проверке авто — простым языком",
+ gateH:"Перед началом",gateGo:"Понятно — войти",homeH:"Что в вашем отчёте?",
+ b1:"Ввести отчёт проверки",b2:"Словарь неисправностей",b3:"Данные авто по номеру",
+ b4:"Подключить ИИ",b5:"Настройки",back:"На главную",dcH:"Словарь неисправностей",
+ stH:"Настройки",plH:"Данные автомобиля",aiH:"Подключить ИИ",fmH:"Ввод отчёта",
+ sevSafety:"Безопасность",sevHigh:"Существенно",sevMed:"Умеренно",sevLow:"Незначительно",sevInfo:"Открытый вопрос"},
+
+es:{dir:"ltr",name:"Español",sub:"El informe de inspección, explicado",
+ gateH:"Antes de empezar",gateGo:"Entendido — entrar",homeH:"¿Qué dice tu informe?",
+ b1:"Introducir el informe",b2:"Diccionario de defectos",b3:"Datos del vehículo",
+ b4:"Conectar una IA",b5:"Ajustes",back:"Volver al inicio",dcH:"Diccionario de defectos",
+ stH:"Ajustes",plH:"Datos del vehículo",aiH:"Conectar una IA",fmH:"Introducir el informe",
+ sevSafety:"Seguridad",sevHigh:"Importante",sevMed:"Moderado",sevLow:"Leve",sevInfo:"Pregunta abierta"},
+
+ar:{dir:"rtl",name:"العربية",sub:"شرح تقرير فحص السيارة",
+ gateH:"قبل أن نبدأ",gateGo:"فهمت — دخول",homeH:"ماذا في تقريرك؟",
+ b1:"إدخال تقرير الفحص",b2:"قاموس الأعطال",b3:"بيانات المركبة",
+ b4:"ربط ذكاء اصطناعي",b5:"الإعدادات",back:"العودة للرئيسية",dcH:"قاموس الأعطال",
+ stH:"الإعدادات",plH:"بيانات المركبة",aiH:"ربط ذكاء اصطناعي",fmH:"إدخال التقرير",
+ sevSafety:"سلامة",sevHigh:"جوهري",sevMed:"متوسط",sevLow:"طفيف",sevInfo:"سؤال مفتوح"}
+};
+function T(k){const l=LANG[S.lang]||LANG.he;return l[k]!==undefined?l[k]:(LANG.en[k]!==undefined?LANG.en[k]:LANG.he[k]||k)}
+
+/* ---------------- state ---------------- */
+const S={
+  ok:store.get("ok",false), lang:store.get("lang","he"), theme:store.get("theme","gold"),
+  light:store.get("light",false), user:store.get("user",""), proxy:store.get("proxy",""),
+  seen:store.get("seen",false), live:{},
+  ai:store.get("ai",{provider:"",key:"",url:"",model:""}),
+  f:store.get("f",{type:"basic",plate:"",km:"",inst:"",rows:{}})
+};
+function saveF(){store.set("f",S.f)}
+
+/* ---------------- ui helpers ---------------- */
+let toastT;
+function toast(m){const e=document.getElementById("toast");e.textContent=m;e.classList.add("on");
+  clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove("on"),2600)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function sheet(title,html){
+  document.getElementById("sheet").innerHTML=
+    '<button class="sheet-x" onclick="closeSheet()">✕</button><h3>'+esc(title)+'</h3>'+html;
+  document.getElementById("ovl").classList.add("on");
+}
+function closeSheet(){document.getElementById("ovl").classList.remove("on")}
+document.getElementById("ovl").addEventListener("click",e=>{if(e.target.id==="ovl")closeSheet()});
+
+function nav(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
+  const el=document.getElementById("s-"+id); if(el)el.classList.add("on");
+  window.scrollTo(0,0);
+  if(id==="dict")renderDict();
+  if(id==="form")renderForm();
+  if(id==="ai")renderAI();
+  if(id==="scan")scanReady();
+  if(id==="set")fillSettings();
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-go]"); if(b){nav(b.dataset.go)}
+});
+
+/* ---------------- theme / lang ---------------- */
+const THEMES=["gold","blue","green","purple","red"];
+function updateLed(){
+  const led=document.getElementById("aiLed");if(!led)return;
+  const on=!!S.ai.provider;
+  led.classList.toggle("on",on);
+  led.title=T("aiLed")+": "+T(on?"aiOn":"aiOff");
+}
+function applyTheme(){
+  document.body.dataset.theme=S.theme;
+  document.body.classList.toggle("light",S.light);
+  document.getElementById("btnMode").textContent=S.light?"☀️":"🌙";
+  const c=getComputedStyle(document.body).getPropertyValue("--bg").trim();
+  document.getElementById("tc-meta").setAttribute("content",c||"#0b0b0d");
+}
+document.getElementById("btnTheme").onclick=()=>{
+  S.theme=THEMES[(THEMES.indexOf(S.theme)+1)%THEMES.length];store.set("theme",S.theme);applyTheme()};
+document.getElementById("btnMode").onclick=()=>{
+  S.light=!S.light;store.set("light",S.light);applyTheme()};
+document.getElementById("btnLang").onclick=()=>{
+  sheet("🌐",Object.keys(LANG).map(k=>
+    '<button class="prov'+(S.lang===k?' sel':'')+'" onclick="setLang(\''+k+'\')"><span class="pi">'+
+    ({he:"🇮🇱",en:"🇬🇧",ru:"🇷🇺",es:"🇪🇸",ar:"🇸🇦"}[k])+'</span><span class="pt"><b>'+LANG[k].name+'</b></span></button>').join(""))};
+function setLang(k){S.lang=k;store.set("lang",k);closeSheet();applyLang()}
+
+function txt(id,k){const e=document.getElementById(id);if(e)e.innerHTML=T(k)}
+function applyLang(){
+  const L=LANG[S.lang]||LANG.he;
+  document.documentElement.lang=S.lang; document.documentElement.dir=L.dir;
+  document.body.lang=S.lang; document.body.dir=L.dir;
+  txt("brandSub","sub");
+  txt("g-h","gateH");txt("g-s","gateS");txt("g-1","g1");txt("g-2","g2");txt("g-3","g3");txt("g-4","g4");
+  txt("g-ckt","gateCk");txt("g-go","gateGo");
+  txt("h-h","homeH");txt("h-s","homeS");txt("h-note","homeNote");
+  for(let i=0;i<=5;i++){txt("h-b"+i,"b"+i);txt("h-t"+i,"t"+i)}
+  txt("sc-h","scH");txt("sc-s","scS");txt("sc-l1","scL1");txt("sc-d1","scD1");txt("sc-b1","scB1");
+  txt("sc-l2","scL2");txt("sc-d2","scD2");txt("sc-b2","scB2");txt("sc-go","scGo");txt("sc-priv","scPriv");
+  txt("rv-h","rvH");txt("rv-s","rvS");txt("rv-go","rvGo");txt("rv-edit","rvEdit");txt("rv-bk","rvBk");
+  txt("f-ver","ver");txt("f-guide","guide");txt("f-about","about");txt("f-priv","priv");
+  txt("fm-h","fmH");txt("fm-s","fmS");txt("fm-l0","fmL0");txt("fm-h0","fmH0");
+  txt("fm-lp","fmLp");txt("fm-lk","fmLk");txt("fm-lc","fmLc");
+  txt("fm-rows","fmRows");txt("fm-run","fmRun");
+  txt("rs-h","rsH");txt("rs-s","rsS");txt("rs-mt","liveRun");txt("rs-pt","rsPrint");txt("rs-st","rsShare");txt("rs-at","rsAi");
+  txt("dc-h","dcH");txt("dc-s","dcS");
+  document.getElementById("dc-q").placeholder=T("dcQ");
+  txt("pl-h","plH");txt("pl-s","plS");txt("pl-l","plL");txt("pl-go","plGo");txt("pl-hint","plHint");
+  txt("ai-h","aiH");txt("ai-s","aiS");txt("ai-note","aiNote");txt("ai-save","aiSave");txt("ai-test","aiTest");
+  txt("ai-extl","aiExtL");txt("ai-extd","aiExtD");txt("ai-ext","aiExtB");
+  txt("st-h","stH");txt("st-lu","stLu");txt("st-hu","stHu");txt("st-lp","stLp");txt("st-hp","stHp");
+  txt("st-prt","prLoad");txt("st-prh","prHint");
+  txt("st-lb","stLb");txt("st-expt","stExp");txt("st-impt","stImp");
+  txt("st-ld","stLd");txt("st-del","stDel");txt("st-hd","stHd");
+  document.querySelectorAll(".bk").forEach(e=>e.textContent=T("back"));
+  document.querySelectorAll(".bk2").forEach(e=>e.textContent=T("back2"));
+  if(document.getElementById("s-form").classList.contains("on"))renderForm();
+  if(document.getElementById("s-dict").classList.contains("on"))renderDict();
+  if(document.getElementById("s-ai").classList.contains("on"))renderAI();
+}
+
+/* ---------------- gate ---------------- */
+document.getElementById("g-ck").onchange=e=>{document.getElementById("g-go").disabled=!e.target.checked};
+document.getElementById("g-go").onclick=()=>{
+  S.ok=true;store.set("ok",true);nav("home");
+  if(!S.seen){S.seen=true;store.set("seen",true);showGuide()}
+};
+
+/* ---------------- form ---------------- */
+function formDef(){return S.f.type==="full"?FORM_FULL:FORM_BASIC}
+function poolFor(row){
+  if(row.src==="CHASSIS"){
+    const c=D.chassis.body;
+    return [].concat(c.high.map(x=>["high",x]),c.low.map(x=>["low",x]),c.minor.map(x=>["minor",x]));
+  }
+  const src=D[row.src];
+  let list=[];
+  if(Array.isArray(src))list=src.slice();
+  else if(src&&typeof src==="object")Object.keys(src).forEach(g=>{src[g].forEach(x=>list.push(x))});
+  if(row.also&&Array.isArray(D[row.also]))list=list.concat(D[row.also]);
+  return list.map(x=>[row.src,x]);
+}
+function renderForm(){
+  document.getElementById("fm-type").value=S.f.type;
+  document.getElementById("fm-plate").value=S.f.plate;
+  document.getElementById("fm-km").value=S.f.km;
+  document.getElementById("fm-inst").value=S.f.inst;
+  const list=document.getElementById("fm-list");
+  list.innerHTML=formDef().map(r=>{
+    const d=S.f.rows[r.n]||{st:"",diag:[],note:""};
+    return '<div class="row"><div class="num">'+r.n+'</div><div class="nm">'+esc(r.t)+
+      (d.st==="bad"?'<div style="margin-top:6px">'+
+        (d.diag.length?d.diag.map(x=>'<span class="chip bad" style="margin:2px 2px 0 0">'+esc(x[1]||x)+'</span>').join(""):'')+
+        '<button class="btn sm ghost" style="margin-top:6px" onclick="pickDiag('+r.n+')">＋ '+T("fmPick")+'</button>'+
+        '<textarea class="in row-note" placeholder="'+T("fmNote")+'" oninput="setNote('+r.n+',this.value)">'+esc(d.note)+'</textarea>'+
+      '</div>':'')+
+      '</div><div class="st">'+
+      '<button class="st-btn'+(d.st==="ok"?" sel-ok":"")+'" onclick="setSt('+r.n+',\'ok\')" title="'+T("fmOk")+'">✓</button>'+
+      '<button class="st-btn'+(d.st==="bad"?" sel-bad":"")+'" onclick="setSt('+r.n+',\'bad\')" title="'+T("fmBad")+'">✕</button>'+
+      '</div></div>';
+  }).join("");
+  const bad=Object.values(S.f.rows).filter(x=>x.st==="bad").length;
+  document.getElementById("fm-cnt").textContent=bad+" "+T("sumBad").toLowerCase();
+}
+function setSt(n,v){const d=S.f.rows[n]||{st:"",diag:[],note:""};d.st=d.st===v?"":v;S.f.rows[n]=d;saveF();renderForm()}
+function setNote(n,v){const d=S.f.rows[n]||{st:"bad",diag:[],note:""};d.note=v;S.f.rows[n]=d;saveF()}
+function pickDiag(n){
+  const row=formDef().find(r=>r.n===n), pool=poolFor(row);
+  const d=S.f.rows[n]||{diag:[]};
+  const sel=new Set(d.diag.map(x=>x[1]||x));
+  const html='<input class="in" id="pd-q" placeholder="'+T("dcQ")+'" oninput="pdFilter()">'+
+    '<div id="pd-list" style="margin-top:10px;max-height:52vh;overflow-y:auto"></div>'+
+    '<button class="btn primary" style="margin-top:12px" onclick="closeSheet()">'+T("done")+'</button>';
+  sheet(row.t,html);
+  window._pool=pool;window._n=n;window._sel=sel;pdFilter();
+}
+function pdFilter(){
+  const q=(document.getElementById("pd-q").value||"").trim();
+  const items=window._pool.filter(p=>!q||p[1].includes(q)).slice(0,120);
+  document.getElementById("pd-list").innerHTML=items.map(p=>{
+    const on=window._sel.has(p[1]);
+    return '<button class="prov'+(on?" sel":"")+'" style="padding:9px 11px" onclick="tgDiag(\''+
+      esc(p[0]).replace(/'/g,"")+'\',\''+p[1].replace(/'/g,"\\'")+'\')"><span class="pi" style="font-size:15px">'+
+      (on?"✓":"○")+'</span><span class="pt"><b style="font-weight:500;font-size:13px">'+esc(p[1])+'</b></span></button>';
+  }).join("")||'<div class="hint">—</div>';
+}
+function tgDiag(cat,name){
+  const d=S.f.rows[window._n]||{st:"bad",diag:[],note:""};
+  const i=d.diag.findIndex(x=>(x[1]||x)===name);
+  if(i>=0){d.diag.splice(i,1);window._sel.delete(name)}else{d.diag.push([cat,name]);window._sel.add(name)}
+  d.st="bad";S.f.rows[window._n]=d;saveF();pdFilter();renderForm();
+}
+["fm-type","fm-plate","fm-km","fm-inst"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",e=>{
+    const k={"fm-type":"type","fm-plate":"plate","fm-km":"km","fm-inst":"inst"}[id];
+    S.f[k]=e.target.value;saveF();if(k==="type")renderForm()})});
+
+
+/* ----- מקורות מרובים לאבחנה ----- */
+const SRC_META={
+ dict:{ic:"📖",he:"המילון של האפליקציה",en:"App dictionary"},
+ g:{ic:"✨",he:"Gemini",en:"Gemini"},
+ k:{ic:"🤖",he:"Grok",en:"Grok"},
+ live:{ic:"🔎",he:"תשובה חיה",en:"Live answer"}
+};
+function srcName(id){const m=SRC_META[id]||{ic:"•",he:id,en:id};return m.ic+" "+(m[S.lang==="he"?"he":"en"]||m.he)}
+function sourcesFor(name,ownExpl){
+  const list=[];
+  if(ownExpl)list.push({id:"dict",e:ownExpl});
+  const s=SRC[name];
+  if(s){
+    if(s.g)list.push({id:"g",e:s.g.e,p:s.g.p});
+    if(s.k)list.push({id:"k",e:s.k.e});
+  }
+  const live=(S.live&&S.live[name])||[];
+  live.forEach(l=>list.push({id:"live",prov:l.prov,e:l.e,p:l.p}));
+  return list;
+}
+function renderSources(name,ownExpl){
+  const list=sourcesFor(name,ownExpl);
+  if(list.length<=1)return "";
+  const agree=list.length>=2;
+  return '<div class="srcbox"><div class="srchd"><span class="chip info">'+list.length+" "+T("srcN")+
+    '</span>'+(agree?'<span class="disc" style="margin:0">'+T("srcCompare")+'</span>':'')+'</div>'+
+    list.map(x=>'<div class="srcrow"><div class="srctag">'+esc(x.id==="live"?"🔎 "+(x.prov||""):srcName(x.id))+'</div>'+
+      '<div class="srctx">'+esc(x.e)+
+      (x.p?'<span class="chip acc" style="margin-inline-start:6px">'+esc(x.p)+'</span>':'')+'</div></div>').join("")+
+    '<div class="disc">'+T("srcDisc")+'</div></div>';
+}
+
+/* ---------------- analysis ---------------- */
+const SEV_ORDER=["safety","high","med","low","info"];
+const SEV_CLS={safety:"bad",high:"bad",med:"warn",low:"info",info:"info"};
+const SEV_KEY={safety:"sevSafety",high:"sevHigh",med:"sevMed",low:"sevLow",info:"sevInfo"};
+
+function explainOne(cat,name){
+  if(cat==="slang"&&SLANG[name])
+    return{name,sev:SLANG[name].sev,cost:0,he:SLANG[name].he,ask:[],amb:"",src:"slang"};
+  const e=EXPL[name];
+  if(e)return{name,sev:e.sev,cost:e.cost,he:e.he,ask:e.ask||[],amb:e.amb||"",src:"dict"};
+  if(cat==="high"||cat==="low"||cat==="minor"){
+    const m={high:"high",low:"med",minor:"low"}[cat];
+    const txt={high:"פגיעה בחלק מבני של הרכב — חלק שנושא עומס. הטופס מסווג את זה כמשמעות גבוהה, וזה משפיע מהותית על השווי ועל הבטיחות.",
+      low:"פגיעה בחלק שאינו מבני — לרוב חלק שמתפרק בברגים או פח חיצוני. הטופס מסווג את זה כמשמעות נמוכה.",
+      minor:"ליקוי קל במרכב או בפנים הרכב. לא משפיע על מבנה או בטיחות."}[cat];
+    return{name,sev:m,cost:cat==="high"?4:(cat==="low"?3:1),he:txt,ask:CAT.chassis.ask,amb:"",src:"chassis"};
+  }
+  const c=CAT[cat]||CAT.remarks;
+  return{name,sev:c.sev,cost:c.cost,he:c.he,ask:c.ask||[],amb:"",src:"cat"};
+}
+function analyze(){
+  const def=formDef(), out=[], asks=new Set(), ambs=[];
+  let okN=0,badN=0;
+  def.forEach(r=>{
+    const d=S.f.rows[r.n]; if(!d||!d.st)return;
+    if(d.st==="ok"){okN++;return}
+    badN++;
+    const items=(d.diag||[]).map(x=>{
+      const e=explainOne(x[0],x[1]);
+      if(x[2]&&norm(x[2])!==norm(x[1]))e.raw=x[2];
+      return e});
+    /* סריקת ההערה החופשית אחרי מונחי סלנג */
+    const scanText=d.rest!==undefined?d.rest:(d.note||"");
+    const notes=[];
+    Object.keys(SLANG).forEach(k=>{
+      if(scanText.includes(k))notes.push({name:k,sev:SLANG[k].sev,cost:0,he:SLANG[k].he,ask:[],amb:"",src:"slang"})});
+    const seen=new Set(), all=items.concat(notes).filter(i=>{
+      if(seen.has(i.name))return false; seen.add(i.name); return true});
+    if(!all.length)all.push(explainOne(r.src==="CHASSIS"?"chassis":r.src,r.t));
+    all.forEach(i=>{
+      (i.ask||[]).forEach(a=>asks.add(a));
+      if(i.amb)ambs.push({n:i.name,t:i.amb});
+    });
+    out.push({row:r,note:d.note||"",items:all});
+  });
+  return{out,asks:[...asks],ambs,okN,badN,
+    safetyN:out.reduce((a,b)=>a+b.items.filter(i=>i.sev==="safety").length,0)};
+}
+function nf(n){return n.toLocaleString("he-IL")}
+
+function renderResult(){
+  const A=analyze(), B=document.getElementById("rs-body");
+  if(!A.badN&&!A.okN){B.innerHTML='<div class="note warn">'+T("noRows")+'</div>';return}
+  let h='<div class="card"><div class="sect-lbl" style="margin-top:0">'+T("sumH")+'</div>'+
+    '<div class="kv"><span>'+T("sumBad")+'</span><b>'+A.badN+'</b></div>'+
+    '<div class="kv"><span>'+T("sumOk")+'</span><b>'+A.okN+'</b></div>'+
+    '<div class="kv"><span>'+T("sumSafety")+'</span><b>'+A.safetyN+'</b></div>'+
+    '<div class="disc">'+T("sumNoScore")+'</div></div>';
+
+  /* קיבוץ לפי חומרה */
+  const byS={}; A.out.forEach(g=>g.items.forEach(i=>{(byS[i.sev]=byS[i.sev]||[]).push({g,i})}));
+  SEV_ORDER.forEach(sv=>{
+    if(!byS[sv])return;
+    h+='<div class="sect-lbl">'+T(SEV_KEY[sv])+' · '+byS[sv].length+'</div>';
+    byS[sv].forEach(({g,i})=>{
+      h+='<div class="card"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">'+
+        '<span class="chip '+SEV_CLS[sv]+'">'+T(SEV_KEY[sv])+'</span>'+
+        '<span class="chip">'+esc(g.row.t)+'</span>'+
+        (i.cost?'<span class="chip acc">'+esc(userPrice(i.name)||bandTx(i.cost))+'</span>':'')+
+        '</div>'+
+        '<b style="font-size:15px">'+esc(i.name)+'</b>'+
+        (i.raw?'<div class="disc" style="margin-top:5px">'+T("rawWas")+' "'+esc(i.raw)+'"</div>':'')+
+        '<p style="margin:7px 0 0;font-size:13.5px;color:var(--text2);line-height:1.75">'+esc(i.he)+'</p>'+
+        (i.amb?'<div class="note warn" style="font-size:12px">⚠️ '+esc(i.amb)+'</div>':'')+
+        renderSources(i.name,i.he)+
+        (i.cost?'<div class="disc">'+T(userPrice(i.name)?"catMine":"catCost")+'</div>':'')+
+        '</div>';
+    });
+  });
+
+  if(A.ambs.length){
+    h+='<div class="sect-lbl">'+T("ambH")+'</div><div class="card">'+
+      A.ambs.map(a=>'<div style="margin-bottom:10px"><b style="font-size:13.5px">'+esc(a.n)+'</b>'+
+      '<p style="margin:4px 0 0;font-size:12.5px;color:var(--text2)">'+esc(a.t)+'</p></div>').join("")+'</div>';
+  }
+  if(A.asks.length){
+    h+='<div class="sect-lbl">'+T("openQ")+'</div><div class="card"><ul style="margin:0;padding-inline-start:18px;font-size:13.5px;line-height:1.9">'+
+      A.asks.map(a=>'<li>'+esc(a)+'</li>').join("")+'</ul></div>';
+  }
+  /* המקור תמיד מוצג — כדי ששום טקסט לא ייעלם בדרך */
+  const notes=A.out.filter(g=>g.note&&g.note.trim());
+  if(notes.length){
+    h+='<div class="sect-lbl">'+T("rawH")+'</div><div class="card tight">'+
+      notes.map(g=>'<div style="padding:9px 0;border-bottom:1px solid var(--border)">'+
+        '<span class="chip">'+esc(g.row.n+". "+g.row.t)+'</span>'+
+        '<div style="margin-top:6px;font-size:13px;color:var(--text2);line-height:1.7">'+esc(g.note)+'</div></div>').join("")+
+      '<div class="disc">'+T("rawD")+'</div></div>';
+  }
+  h+='<div class="note bad" style="margin-top:16px">'+T("g1")+'</div>';
+  B.innerHTML=h;
+}
+async function askMoreSources(){
+  if(!S.ai.provider){nav("ai");toast(T("aiOff"));return}
+  const A=analyze();
+  const names=[...new Set(A.out.flatMap(g=>g.items.map(i=>i.name)).filter(Boolean))];
+  if(!names.length)return;
+  toast(T("liveWait"));
+  const provLabel=(PROVS.find(p=>p.id===S.ai.provider)||{}).n?.[S.lang==="he"?"he":"en"]||S.ai.provider;
+  const prompt="לכל אבחנה מטופס בדיקת רכב, תן הסבר קצר של משפט אחד בשפה פשוטה, וטווח מחיר תיקון מקובל בישראל בשקלים (או ריק אם לא ידוע). "+
+    "החזר JSON בלבד, מערך: [{\"name\":\"\",\"e\":\"\",\"p\":\"\"}]. שמות האבחנות: "+JSON.stringify(names);
+  try{
+    const arr=parseJSONArr(await aiCall(prompt));
+    arr.forEach(o=>{
+      if(!o||!o.name)return;
+      const key=names.find(n=>n===o.name)||o.name;
+      (S.live[key]=S.live[key]||[]).push({prov:provLabel,e:o.e||"",p:o.p||""});
+    });
+    renderResult();toast(T("done"));
+  }catch(e){toast(T("err")+e.message)}
+}
+function parseJSONArr(t){
+  let s=String(t).trim().replace(/^```(json)?/i,"").replace(/```$/,"").trim();
+  const i=s.indexOf("["),j=s.lastIndexOf("]");
+  if(i<0||j<0)throw new Error("bad json");
+  return JSON.parse(s.slice(i,j+1));
+}
+document.getElementById("fm-run").onclick=()=>{nav("res");renderResult()};
+
+/* ---------------- dictionary ---------------- */
+function allTerms(){
+  const t=[];
+  Object.keys(D).forEach(k=>{
+    if(k==="chassis")return;
+    const v=D[k];
+    if(Array.isArray(v))v.forEach(x=>t.push([k,x]));
+    else Object.keys(v).forEach(g=>v[g].forEach(x=>t.push([k,x])));
+  });
+  ["high","low","minor"].forEach(lv=>D.chassis.body[lv].forEach(x=>t.push([lv,x])));
+  Object.keys(SLANG).forEach(k=>t.push(["slang",k]));
+  return t;
+}
+let _terms=null;
+function renderDict(){
+  if(!_terms)_terms=allTerms();
+  const q=(document.getElementById("dc-q").value||"").trim();
+  const hits=_terms.filter(t=>!q||t[1].includes(q));
+  document.getElementById("dc-cnt").textContent=hits.length+" / "+_terms.length;
+  document.getElementById("dc-list").innerHTML=hits.slice(0,80).map((t,ix)=>{
+    const e=t[0]==="slang"?{...SLANG[t[1]],cost:0,ask:[],amb:""}:explainOne(t[0],t[1]);
+    const sv=e.sev||"info";
+    return '<div class="dict-item"><button class="dict-head" onclick="this.parentNode.classList.toggle(\'open\')">'+
+      '<span class="chip '+SEV_CLS[sv]+'">'+T(SEV_KEY[sv])+'</span><b>'+esc(t[1])+'</b><span style="color:var(--text3)">▾</span></button>'+
+      '<div class="dict-body"><p>'+esc(e.he)+'</p>'+
+      (e.cost?'<h5>'+T(userPrice(t[1])?"catMine":"catCost")+'</h5><p>'+esc(userPrice(t[1])||bandTx(e.cost))+'</p>':'')+
+      (e.ask&&e.ask.length?'<h5>'+T("catAsk")+'</h5><ul>'+e.ask.map(a=>'<li>'+esc(a)+'</li>').join("")+'</ul>':'')+
+      (e.amb?'<h5>'+T("catAmb")+'</h5><p>'+esc(e.amb)+'</p>':'')+
+      renderSources(t[1],e.he)+
+      '</div></div>';
+  }).join("")||'<div class="hint">—</div>';
+}
+document.getElementById("dc-q").addEventListener("input",renderDict);
+
+/* ---------------- plate lookup ---------------- */
+const MO_API="https://data.gov.il/api/3/action/datastore_search";
+const RES={veh:"053cea08-09bc-40ec-8f7a-156f0677aff3",hist:"56063a99-8a3e-4ff4-912e-5966c0279bad",
+  recall:"36bf1404-0be4-49d2-82dc-2f1ead4a8b93"};
+function moURL(rid,filters,limit){
+  const u=MO_API+"?resource_id="+rid+"&limit="+(limit||20)+"&filters="+encodeURIComponent(JSON.stringify(filters));
+  return S.proxy?S.proxy.replace(/\/$/,"")+"/"+encodeURIComponent(u):u;
+}
+async function moFetch(rid,f,l){const r=await fetch(moURL(rid,f,l));
+  if(!r.ok)throw new Error("HTTP "+r.status);const j=await r.json();return (j.result&&j.result.records)||[]}
+function plateVars(p){const c=String(p).replace(/\D/g,"");const v=[c];
+  if(c.length===7)v.push("0"+c);else if(c.length===8&&c[0]==="0")v.push(c.slice(1));return v}
+
+document.getElementById("pl-go").onclick=async()=>{
+  const p=document.getElementById("pl-in").value.trim(); if(!p)return;
+  const out=document.getElementById("pl-out");
+  out.innerHTML='<div class="card"><span class="spin"></span> '+T("searching")+'</div>';
+  try{
+    let veh=null;
+    for(const v of plateVars(p)){const r=await moFetch(RES.veh,{mispar_rechev:v},1);if(r.length){veh=r[0];break}}
+    if(!veh){out.innerHTML='<div class="note warn">'+T("notFound")+'</div>';return}
+    let rec=[];try{for(const v of plateVars(p))rec=rec.concat(await moFetch(RES.recall,{mispar_rechev:v},10))}catch(e){}
+    const kv=(a,b)=>b?'<div class="kv"><span>'+esc(a)+'</span><b>'+esc(b)+'</b></div>':"";
+    out.innerHTML='<div class="card">'+
+      kv("תוצר",veh.tozeret_nm)+kv("דגם",veh.kinuy_mishari||veh.degem_nm)+
+      kv("שנת ייצור",veh.shnat_yitzur)+kv("סוג",veh.sug_degem)+kv("צבע",veh.tzeva_rechev)+
+      kv("דלק",veh.sug_delek_nm)+kv("מס' שלדה",veh.misgeret)+
+      kv("טסט אחרון",veh.mivchan_acharon_dt)+kv("תוקף רישוי",veh.tokef_dt)+
+      kv("צמיג קדמי",veh.zmig_kidmi)+kv("צמיג אחורי",veh.zmig_ahori)+
+      '</div>'+
+      (rec.length?'<div class="note bad"><b>ריקול פתוח: '+rec.length+'</b><br>קריאת שירות של היצרן שטרם בוצעה. שווה לברר מול היבואן.</div>':"")+
+      '<div class="disc">מקור: המאגר הפתוח של משרד התחבורה (data.gov.il). המידע כפי שהוא במאגר ועשוי להיות לא מעודכן.</div>';
+  }catch(e){
+    out.innerHTML='<div class="note warn">'+T("err")+esc(e.message)+
+      '<br>ייתכן שהדפדפן חוסם את הפנייה. הזן כתובת proxy בהגדרות.</div>';
+  }
+};
+
+/* ---------------- AI ---------------- */
+const PROVS=[
+ {id:"none",ic:"📕",n:{he:"בלי בינה — מילון מקומי",en:"No AI — local dictionary"},
+  d:{he:"ברירת המחדל. עובד אופליין, בלי חשבון ובלי עלות.",en:"Default. Works offline, no account, no cost."},bd:{he:"חינם",en:"Free"},cls:"ok"},
+ {id:"gemini",ic:"✨",n:{he:"Gemini (Google)",en:"Gemini (Google)"},
+  d:{he:"יש מסלול חינמי אמיתי בלי כרטיס אשראי. aistudio.google.com",en:"Real free tier, no credit card. aistudio.google.com"},bd:{he:"חינם",en:"Free tier"},cls:"ok"},
+ {id:"local",ic:"📱",n:{he:"AI על המחשב שלך",en:"AI on your computer"},
+  d:{he:"Ollama או LM Studio. שום נתון לא עוזב את המכשיר.",en:"Ollama or LM Studio. Nothing leaves your device."},bd:{he:"מקומי",en:"Local"},cls:"info"},
+ {id:"claude",ic:"🤖",n:{he:"Claude (Anthropic)",en:"Claude (Anthropic)"},
+  d:{he:"בתשלום לפי שימוש. console.anthropic.com",en:"Pay per use. console.anthropic.com"},bd:{he:"בתשלום",en:"Paid"},cls:"warn"},
+ {id:"openai",ic:"💬",n:{he:"ChatGPT (OpenAI)",en:"ChatGPT (OpenAI)"},
+  d:{he:"בתשלום לפי שימוש. platform.openai.com",en:"Pay per use. platform.openai.com"},bd:{he:"בתשלום",en:"Paid"},cls:"warn"},
+ {id:"custom",ic:"⚙️",n:{he:"כתובת מותאמת",en:"Custom endpoint"},
+  d:{he:"כל API תואם OpenAI.",en:"Any OpenAI-compatible API."},bd:{he:"מתקדם",en:"Advanced"},cls:""}
+];
+function renderAI(){
+  const lg=S.lang==="he"?"he":"en";
+  document.getElementById("ai-provs").innerHTML=PROVS.map(p=>{
+    const on=S.ai.provider===p.id||(!S.ai.provider&&p.id==="none");
+    let area="";
+    if(p.id!=="none"){
+      area='<div class="prov-area'+(on?" on":"")+'" id="pa-'+p.id+'">';
+      if(p.id!=="local")area+='<label class="fld">API key</label><input class="in" id="k-'+p.id+'" value="'+esc(S.ai.provider===p.id?S.ai.key:"")+'" placeholder="...">';
+      if(p.id==="local"||p.id==="custom")area+='<label class="fld">URL</label><input class="in" id="u-'+p.id+'" value="'+esc(S.ai.provider===p.id?S.ai.url:"")+'" placeholder="'+(p.id==="local"?"http://localhost:11434/v1/chat/completions":"https://...")+'">';
+      area+='<label class="fld">'+(lg==="he"?"מודל (אופציונלי)":"Model (optional)")+'</label><input class="in" id="m-'+p.id+'" value="'+esc(S.ai.provider===p.id?S.ai.model:"")+'" placeholder="'+({gemini:"gemini-2.5-flash",claude:"claude-sonnet-4-6",openai:"gpt-4o-mini",local:"llama3",custom:"gpt-4o-mini"}[p.id]||"")+'">';
+      area+='</div>';
+    }
+    return '<button class="prov'+(on?" sel":"")+'" onclick="selProv(\''+p.id+'\')"><span class="pi">'+p.ic+
+      '</span><span class="pt"><b>'+p.n[lg]+'</b><span>'+p.d[lg]+'</span></span><span class="chip '+p.cls+'">'+p.bd[lg]+'</span></button>'+area;
+  }).join("");
+}
+function selProv(id){
+  document.querySelectorAll(".prov-area").forEach(a=>a.classList.remove("on"));
+  const a=document.getElementById("pa-"+id); if(a)a.classList.add("on");
+  document.querySelectorAll("#ai-provs .prov").forEach(b=>b.classList.remove("sel"));
+  const idx=PROVS.findIndex(p=>p.id===id);
+  document.querySelectorAll("#ai-provs .prov")[idx].classList.add("sel");
+  window._prov=id;
+}
+document.getElementById("ai-save").onclick=()=>{
+  const id=window._prov||S.ai.provider||"none";
+  if(id==="none"){S.ai={provider:"",key:"",url:"",model:""}}
+  else{
+    S.ai={provider:id,
+      key:(document.getElementById("k-"+id)||{}).value||"",
+      url:(document.getElementById("u-"+id)||{}).value||"",
+      model:(document.getElementById("m-"+id)||{}).value||""};
+  }
+  store.set("ai",S.ai);toast(T("done"));renderAI();updateLed();
+};
+async function aiCall(prompt){
+  const a=S.ai;
+  if(!a.provider)throw new Error("no provider");
+  if(a.provider==="claude"){
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":a.key,"anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:a.model||"claude-sonnet-4-6",max_tokens:1200,messages:[{role:"user",content:prompt}]})});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const d=await r.json();return (d.content&&d.content[0]&&d.content[0].text)||"";
+  }
+  if(a.provider==="gemini"){
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+(a.model||"gemini-2.5-flash")+":generateContent?key="+a.key,
+      {method:"POST",headers:{"Content-Type":"application/json"},
+       body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.3,maxOutputTokens:1200}})});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const d=await r.json();return d?.candidates?.[0]?.content?.parts?.[0]?.text||"";
+  }
+  const url=a.url||"https://api.openai.com/v1/chat/completions";
+  const h={"Content-Type":"application/json"}; if(a.key)h.Authorization="Bearer "+a.key;
+  const r=await fetch(url,{method:"POST",headers:h,
+    body:JSON.stringify({model:a.model||"gpt-4o-mini",max_tokens:1200,messages:[{role:"user",content:prompt}]})});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const d=await r.json();return d?.choices?.[0]?.message?.content||"";
+}
+document.getElementById("ai-test").onclick=async()=>{
+  const o=document.getElementById("ai-testout");
+  if(!S.ai.provider){o.textContent="—";return}
+  o.innerHTML='<span class="spin"></span>';
+  try{await aiCall("ענה במילה אחת: שלום");o.textContent="✓ "+T("aiOn")}
+  catch(e){o.textContent="✗ "+T("err")+e.message}
+};
+function buildPrompt(){
+  const A=analyze();
+  let t="להלן ממצאים מטופס בדיקת רכב לפני קנייה בישראל (נוסח משרד התחבורה).\n\n";
+  A.out.forEach(g=>{
+    t+="• "+g.row.t+": "+(g.items.map(i=>i.name).join("; ")||"—")+(g.note?" | הערת הבוחן: "+g.note:"")+"\n";
+  });
+  t+="\nהסבר כל ממצא בשפת יומיום פשוטה למי שלא מבין ברכבים. אל תמליץ אם לקנות או לא. "+
+     "אל תיתן ציון או אחוזים. אל תמציא מחירים מדויקים — לכל היותר טווח כללי ותוסיף שזה להמחשה בלבד. "+
+     "אם ניסוח כלשהו דו-משמעי — אמור זאת במפורש במקום לבחור פרשנות. סיים ברשימת שאלות לשאול את הבוחן.";
+  return t;
+}
+document.getElementById("rs-ai").onclick=async()=>{
+  if(!S.ai.provider){nav("ai");toast(T("aiOff"));return}
+  const B=document.getElementById("rs-body");
+  const old=B.innerHTML;
+  B.insertAdjacentHTML("afterbegin",'<div class="card" id="ai-box"><span class="spin"></span></div>');
+  try{
+    const r=await aiCall(buildPrompt());
+    document.getElementById("ai-box").innerHTML=
+      '<span class="chip info">🤖 '+(S.lang==="he"?"נוסח על ידי בינה מלאכותית":"Written by AI")+'</span>'+
+      '<p style="margin:10px 0 0;white-space:pre-wrap;font-size:13.5px;line-height:1.8">'+esc(r)+'</p>'+
+      '<div class="disc">'+T("g1").replace(/<[^>]+>/g,"")+'</div>';
+  }catch(e){document.getElementById("ai-box").innerHTML='<div class="note warn">'+T("err")+esc(e.message)+'</div>'}
+};
+document.getElementById("ai-ext").onclick=()=>{
+  const t=buildPrompt();
+  if(navigator.share)navigator.share({text:t}).catch(()=>{});
+  else{navigator.clipboard.writeText(t).then(()=>toast(T("copied")))}
+};
+
+/* ---------------- share / print ---------------- */
+document.getElementById("rs-more").onclick=askMoreSources;
+document.getElementById("rs-print").onclick=()=>window.print();
+document.getElementById("rs-share").onclick=()=>{
+  const A=analyze();
+  let t=(S.user?S.user+" · ":"")+"AutoClear — "+T("rsH")+"\n"+
+    (S.f.plate?"רכב "+S.f.plate+"\n":"")+"\n";
+  A.out.forEach(g=>{t+="• "+g.row.t+": "+g.items.map(i=>i.name).join("; ")+"\n"});
+  t+="\n"+T("g1").replace(/<[^>]+>/g,"");
+  if(navigator.share)navigator.share({text:t}).catch(()=>{});
+  else navigator.clipboard.writeText(t).then(()=>toast(T("copied")));
+};
+
+/* ---------------- settings ---------------- */
+function fillSettings(){
+  document.getElementById("st-user").value=S.user;
+  document.getElementById("st-proxy").value=S.proxy;
+}
+document.getElementById("st-user").addEventListener("input",e=>{S.user=e.target.value;store.set("user",S.user)});
+document.getElementById("st-proxy").addEventListener("input",e=>{S.proxy=e.target.value;store.set("proxy",S.proxy)});
+function dl(name,txt,type){
+  const b=new Blob([txt],{type:type||"application/json"}),u=URL.createObjectURL(b);
+  const a=document.createElement("a");a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);
+}
+document.getElementById("st-exp").onclick=()=>{
+  dl("autoclear-backup-"+new Date().toISOString().slice(0,10)+".json",
+    JSON.stringify({app:"AutoClear",ver:VER,user:S.user,date:new Date().toISOString(),form:S.f},null,2));
+};
+document.getElementById("st-imp").onclick=()=>document.getElementById("st-file").click();
+document.getElementById("st-file").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const j=JSON.parse(r.result);if(j.form){S.f=j.form;saveF();toast(T("done"));renderForm()}}
+    catch(err){toast(T("err")+err.message)}};
+  r.readAsText(f);
+};
+document.getElementById("st-csv").onclick=()=>{
+  const A=analyze();
+  let c="\ufeffסעיף,ממצא,חומרה,אומדן להמחשה בלבד\n";
+  A.out.forEach(g=>g.items.forEach(i=>{
+    c+='"'+g.row.t+'","'+i.name+'","'+T(SEV_KEY[i.sev])+'","'+(userPrice(i.name)||bandTx(i.cost)||"")+'"\n'}));
+  dl("autoclear.csv",c,"text/csv");
+};
+document.getElementById("st-del").onclick=()=>{
+  if(!confirm(T("delAsk1")))return; if(!confirm(T("delAsk2")))return;
+  ["f","user","proxy","ai","seen","prices"].forEach(k=>store.del(k));
+  S.f={type:"basic",plate:"",km:"",inst:"",rows:{}};S.user="";S.proxy="";S.ai={provider:"",key:"",url:"",model:""};S.live={};updateLed();
+  toast(T("done"));nav("home");
+};
+
+/* ---------------- guide / about / privacy ---------------- */
+const GUIDE={he:[
+ ["📋","הזן את הטופס","עוברים סעיף-סעיף ומסמנים בדיוק מה שכתוב בטופס שבידך. אפשר לבחור אבחנות מהרשימה הרשמית של משרד התחבורה."],
+ ["📖","או פשוט תחפש","אם מעניין אותך רק סעיף אחד — המילון נותן תשובה בשתי שניות."],
+ ["⚖️","בלי ציונים, בלי המלצות","האפליקציה לא תגיד לך אם לקנות. היא תגיד לך מה כתוב ומה שווה לשאול."],
+ ["💰","מחירים = המחשה","כל מספר כאן הוא טווח כללי. המחיר האמיתי מגיע רק מהצעה כתובה של מוסך מורשה."],
+ ["🤖","בינה — אופציונלי","האפליקציה עובדת מצוין בלי שום חיבור. הבינה רק מנסחת יפה יותר."],
+ ["🔒","הכל נשאר אצלך","הנתונים נשמרים על המכשיר בלבד. אין לנו שרת ואין לנו גישה."]
+]};
+function showGuide(){
+  const g=GUIDE[S.lang]||GUIDE.he;
+  sheet(T("guide"),g.map(x=>'<div style="display:flex;gap:12px;margin-bottom:16px"><div style="font-size:24px">'+x[0]+
+    '</div><div><b style="font-size:14px">'+x[1]+'</b><p style="margin:3px 0 0;font-size:13px;color:var(--text2);line-height:1.65">'+x[2]+
+    '</p></div></div>').join("")+'<button class="btn primary" onclick="closeSheet()">'+T("done")+'</button>');
+}
+document.getElementById("f-guide").onclick=e=>{e.preventDefault();showGuide()};
+const APPNEST_STORE="https://barakaflalo.github.io/appnest";
+const APPNEST_MAIL="appnest55@gmail.com";
+function shareApp(){
+  const url=location.href, t="AutoClear — "+T("sub");
+  if(navigator.share)navigator.share({title:"AutoClear",text:t,url}).catch(()=>{});
+  else navigator.clipboard.writeText(url).then(()=>toast(T("copied")));
+}
+function sendFeedback(){
+  location.href="mailto:"+APPNEST_MAIL+"?subject="+encodeURIComponent("AutoClear "+VER+" — "+T("about"));
+}
+document.getElementById("f-about").onclick=e=>{e.preventDefault();
+  const row=(k,v)=>'<div class="kv"><span>'+k+'</span><b>'+v+'</b></div>';
+  sheet(T("about"),
+   '<div style="text-align:center;margin-bottom:14px">'+
+     '<img src="icon-192.png" alt="" style="width:64px;height:64px;border-radius:16px;border:1px solid var(--border2)">'+
+     '<div style="font-size:18px;font-weight:700;margin-top:8px;color:var(--accent)">AutoClear</div>'+
+     '<div style="font-size:12px;color:var(--text3)">'+T("ver")+'</div></div>'+
+   '<div class="card tight">'+
+     row(T("abApp"),"AutoClear")+row(T("abVer"),VER)+row(T("abDev"),"Barak Aflalo")+
+     row(T("abPlat"),"PWA · HTML5")+row(T("abStore"),T("abStoreV"))+row(T("abLic"),"© AppNest 2026")+
+   '</div>'+
+   '<p style="font-size:12.5px;color:var(--text2);line-height:1.7">'+T("abDesc")+'</p>'+
+   '<button class="btn" style="margin-top:6px" onclick="shareApp()">📤 '+T("abShare")+'</button>'+
+   '<button class="btn" style="margin-top:8px" onclick="sendFeedback()">✉️ '+T("abFeedback")+'</button>'+
+   '<button class="btn" style="margin-top:8px" onclick="closeSheet();showGuide()">📘 '+T("guide")+'</button>'+
+   '<a class="btn" style="margin-top:8px" href="'+APPNEST_STORE+'" target="_blank" rel="noopener">🏬 '+T("abStoreLink")+'</a>'+
+   '<button class="btn ghost" style="margin-top:8px" onclick="closeSheet();document.getElementById(\'f-priv\').click()">🔒 '+T("priv")+'</button>'+
+   '<div class="note bad" style="margin-top:14px;font-size:12px">'+T("g1")+'</div>'+
+   '<div style="text-align:center;font-size:11px;color:var(--text3);margin-top:10px">AppNest · © 2026</div>')};
+document.getElementById("f-priv").onclick=e=>{e.preventDefault();
+  sheet(T("priv"),'<div style="font-size:13px;line-height:1.8">'+T("privBody")+'</div>'+
+   '<button class="btn" style="margin-top:12px" onclick="sendFeedback()">✉️ '+T("abFeedback")+'</button>')};
+
+/* =====================================================================
+   AutoClear — סריקה, חילוץ והצלבה מול משרד התחבורה
+   ===================================================================== */
+
+/* ---------- סדרי גודל, לא מחירים ---------- */
+const BANDS={
+ 1:{he:"בדרך כלל תיקון זול",en:"Usually cheap"},
+ 2:{he:"בדרך כלל עלות בינונית",en:"Usually moderate"},
+ 3:{he:"בדרך כלל יקר",en:"Usually expensive"},
+ 4:{he:"יקר מאוד — חייב הצעת מחיר",en:"Very expensive — get a quote"},
+ 5:{he:"מהסעיפים היקרים ברכב",en:"Among the most expensive"}
+};
+function bandTx(c){
+  if(!c||!BANDS[c])return "";
+  const pr=store.get("prices",null);
+  return BANDS[c][S.lang==="he"?"he":"en"];
+}
+/* מחירון אמיתי — רק אם המשתמש טען אחד בעצמו */
+function userPrice(name){
+  const pr=store.get("prices",null);
+  return pr&&pr[name]?pr[name]:null;
+}
+
+/* ---------- תמונות ---------- */
+const SHOTS={lic:[],frm:[]};
+let ALLPOOL=null;
+function fileToImg(file,maxDim){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onerror=()=>rej(new Error("read"));
+    r.onload=()=>{
+      const im=new Image();
+      im.onerror=()=>rej(new Error("decode"));
+      im.onload=()=>{
+        let{width:w,height:h}=im, m=maxDim||1600;
+        if(Math.max(w,h)>m){const k=m/Math.max(w,h);w=Math.round(w*k);h=Math.round(h*k)}
+        const c=document.createElement("canvas");c.width=w;c.height=h;
+        c.getContext("2d").drawImage(im,0,0,w,h);
+        res(c.toDataURL("image/jpeg",.82));
+      };
+      im.src=r.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+function b64(dataUrl){return dataUrl.split(",")[1]}
+function drawThumbs(kind){
+  const el=document.getElementById(kind==="lic"?"sc-lic-thumbs":"sc-frm-thumbs");
+  el.innerHTML=SHOTS[kind].map((d,i)=>
+    '<div class="shot"><img src="'+d+'"><button onclick="rmShot(\''+kind+'\','+i+')">✕</button></div>').join("");
+}
+function rmShot(k,i){SHOTS[k].splice(i,1);drawThumbs(k)}
+async function addShots(kind,files,max){
+  for(const f of [...files].slice(0,max-SHOTS[kind].length)){
+    try{SHOTS[kind].push(await fileToImg(f,1600))}catch(e){toast(T("err")+e.message)}
+  }
+  drawThumbs(kind);
+}
+document.getElementById("sc-lic").addEventListener("change",e=>{
+  SHOTS.lic=[];addShots("lic",e.target.files,1);e.target.value=""});
+document.getElementById("sc-frm").addEventListener("change",e=>{
+  addShots("frm",e.target.files,4);e.target.value=""});
+
+/* ---------- קריאת תמונה על ידי מודל ראייה ---------- */
+const VISION_OK=["claude","gemini","openai","custom"];
+async function aiVision(images,prompt){
+  const a=S.ai;
+  if(!a.provider||VISION_OK.indexOf(a.provider)<0)throw new Error(T("needVision"));
+  if(a.provider==="claude"){
+    const content=images.map(d=>({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64(d)}}));
+    content.push({type:"text",text:prompt});
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":a.key,"anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:a.model||"claude-sonnet-4-6",max_tokens:4000,messages:[{role:"user",content}]})});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const d=await r.json();return (d.content&&d.content[0]&&d.content[0].text)||"";
+  }
+  if(a.provider==="gemini"){
+    const parts=images.map(d=>({inline_data:{mime_type:"image/jpeg",data:b64(d)}}));
+    parts.push({text:prompt});
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+
+      (a.model||"gemini-2.5-flash")+":generateContent?key="+a.key,
+      {method:"POST",headers:{"Content-Type":"application/json"},
+       body:JSON.stringify({contents:[{parts}],generationConfig:{temperature:0,maxOutputTokens:4000}})});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const d=await r.json();return d?.candidates?.[0]?.content?.parts?.[0]?.text||"";
+  }
+  const content=images.map(d=>({type:"image_url",image_url:{url:d}}));
+  content.push({type:"text",text:prompt});
+  const url=a.url||"https://api.openai.com/v1/chat/completions";
+  const h={"Content-Type":"application/json"}; if(a.key)h.Authorization="Bearer "+a.key;
+  const r=await fetch(url,{method:"POST",headers:h,
+    body:JSON.stringify({model:a.model||"gpt-4o-mini",max_tokens:4000,messages:[{role:"user",content}]})});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const d=await r.json();return d?.choices?.[0]?.message?.content||"";
+}
+function parseJSON(t){
+  let s=String(t).trim().replace(/^```(json)?/i,"").replace(/```$/,"").trim();
+  const i=s.indexOf("{"), j=s.lastIndexOf("}");
+  if(i<0||j<0)throw new Error("bad json");
+  return JSON.parse(s.slice(i,j+1));
+}
+
+/* ---------- התאמת טקסט חופשי לרשימה הסגורה של נספח 5 ---------- */
+function norm(s){return String(s||"").replace(/[״"׳'.,()\/\-–]/g," ").replace(/\s+/g," ").trim()}
+function matchDiag(text,pool,mult){
+  const t=norm(text); if(!t)return null;
+  const words=t.split(" ").filter(w=>w.length>2);
+  let best=null,bs=0;
+  pool.forEach(p=>{
+    const n=norm(p[1]); let sc=0;
+    if(n===t)sc=999;
+    else{
+      words.forEach(w=>{
+        if(n.includes(w))sc+=w.length>=4?3:2;
+        else{const st=w.slice(0,Math.max(3,w.length-2));if(st.length>=3&&n.includes(st))sc+=1}
+      });
+      const nw=n.split(" ").filter(w=>w.length>2);
+      nw.forEach(w=>{if(t.includes(w))sc+=1});
+    }
+    if(sc>bs){bs=sc;best=p}
+  });
+  const need=Math.max(3,Math.min(6,words.length*2))*(mult||1);
+  return bs>=need?{p:best,score:bs,exact:bs>=999}:null;
+}
+
+/* ---------- הצלבה: רישיון רכב מול מאגר משרד התחבורה ---------- */
+const CMP=[
+ {k:"vin",   mo:v=>v.misgeret,            lb:{he:"מספר שלדה",en:"VIN"},          lv:"bad",
+  why:{he:"מספר השלדה ברישיון שונה מהרשום במאגר. זה הפרש שאסור להתעלם ממנו — הוא עלול להעיד על טעות ברישום, על רישיון שאינו של הרכב הזה, או על משהו חמור יותר.",
+       en:"The VIN on the licence differs from the registry."}},
+ {k:"year",  mo:v=>v.shnat_yitzur,        lb:{he:"שנת ייצור",en:"Year"},         lv:"bad",
+  why:{he:"שנת הייצור אינה תואמת. שנה משפיעה ישירות על שווי הרכב.",en:"Year of manufacture does not match."}},
+ {k:"make",  mo:v=>v.tozeret_nm,          lb:{he:"תוצר",en:"Make"},              lv:"bad",
+  why:{he:"שם היצרן אינו תואם את המאגר.",en:"Manufacturer does not match."}},
+ {k:"model", mo:v=>v.kinuy_mishari||v.degem_nm, lb:{he:"דגם",en:"Model"},        lv:"warn",
+  why:{he:"הדגם אינו תואם. לעיתים זה רק הבדל בניסוח מסחרי, אבל שווה לוודא.",en:"Model does not match."}},
+ {k:"color", mo:v=>v.tzeva_rechev,        lb:{he:"צבע",en:"Colour"},             lv:"warn",
+  why:{he:"הצבע אינו תואם. צביעה מחדש היא דבר לגיטימי אבל חייבת להיות רשומה — ולעיתים היא מעידה על תיקון אחרי תאונה.",
+       en:"Colour does not match. A respray must be registered."}},
+ {k:"fuel",  mo:v=>v.sug_delek_nm,        lb:{he:"סוג דלק",en:"Fuel"},           lv:"warn",
+  why:{he:"סוג הדלק אינו תואם.",en:"Fuel type does not match."}},
+ {k:"tire_front",mo:v=>v.zmig_kidmi,      lb:{he:"צמיג קדמי",en:"Front tyre"},   lv:"info",
+  why:{he:"מידת הצמיג הקדמי שונה מהמאושר. נפוץ מאוד, אבל מידה לא מאושרת עלולה לחסום טסט.",
+       en:"Front tyre size differs from the approved size."}},
+ {k:"tire_rear", mo:v=>v.zmig_ahori,      lb:{he:"צמיג אחורי",en:"Rear tyre"},   lv:"info",
+  why:{he:"מידת הצמיג האחורי שונה מהמאושר.",en:"Rear tyre size differs."}}
+];
+function same(a,b){
+  a=norm(a).toLowerCase();b=norm(b).toLowerCase();
+  if(!a||!b)return null;                       // אין מה להשוות
+  if(a===b)return true;
+  const da=a.replace(/\D/g,""),db=b.replace(/\D/g,"");
+  if(da&&db&&da===db)return true;
+  return a.includes(b)||b.includes(a)?true:false;
+}
+function crossCheck(lic,mo){
+  const rows=[];
+  CMP.forEach(c=>{
+    const l=lic[c.k], m=c.mo(mo);
+    const r=same(l,m);
+    rows.push({lb:c.lb[S.lang==="he"?"he":"en"],lic:l||"—",mot:m||"—",
+      ok:r,lv:c.lv,why:c.why[S.lang==="he"?"he":"en"]});
+  });
+  return rows;
+}
+
+/* ---------- הפעלה ---------- */
+const P_LIC=`זו תמונה של רישיון רכב ישראלי. חלץ את הנתונים בדיוק כפי שהם מודפסים.
+החזר JSON בלבד, בלי טקסט נוסף, בלי markdown:
+{"plate":"","vin":"","engine_no":"","make":"","model":"","year":"","color":"","fuel":"","tire_front":"","tire_rear":"","test_valid_until":"","owner_type":"","km":""}
+כללים: אם שדה אינו קריא או אינו מופיע — החזר מחרוזת ריקה. אל תנחש ואל תשלים מהידע שלך. מספר רישוי — ספרות בלבד.`;
+
+const P_FRM=`אלו תמונות של "טופס סיכום אחיד" של בדיקת רכב לפני קנייה בישראל (הוראת נוהל 127 של משרד התחבורה).
+בטופס יש טבלה ממוספרת של מערכות. לכל שורה יש סימון "תקין" (✓) או "לא תקין" (✗), ועמודת "אבחנה" עם טקסט.
+חלץ את מה שכתוב, מילה במילה, בלי לפרש ובלי להוסיף.
+החזר JSON בלבד, בלי טקסט נוסף, בלי markdown:
+{"plate":"","km":"","institute":"","date":"","form_type":"basic","rows":[{"n":1,"name":"","status":"ok","text":""}]}
+כללים:
+- form_type: "full" אם יש בטופס סעיפים על מערכות ממוחשבות/ניהול מנוע, אחרת "basic".
+- status: "ok" אם סומן תקין, "bad" אם סומן לא תקין, "" אם לא סומן כלום.
+- text: כל הטקסט שמופיע בעמודת האבחנה לאותה שורה, כלשונו. אם ריק — מחרוזת ריקה.
+- אל תמציא שורות שאינן בטופס ואל תתקן שגיאות כתיב.`;
+
+function prog(h){document.getElementById("sc-prog").innerHTML=h}
+function step(n,t,st){
+  return '<div class="kv"><span>'+(st==="run"?'<span class="spin"></span>':st==="ok"?"✓":st==="err"?"✗":"○")+
+    " "+esc(t)+'</span><b></b></div>';
+}
+let SCAN={lic:null,mot:null,cmp:[],rowsRead:[],unmatched:[]};
+
+document.getElementById("sc-go").onclick=async()=>{
+  if(!S.ai.provider||VISION_OK.indexOf(S.ai.provider)<0){nav("ai");toast(T("needVision"));return}
+  if(!SHOTS.lic.length&&!SHOTS.frm.length){toast(T("scNoImg"));return}
+  const btn=document.getElementById("sc-go");btn.disabled=true;
+  SCAN={lic:null,mot:null,cmp:[],rowsRead:[],unmatched:[]};
+  const st=["","","",""];
+  const paint=()=>prog('<div class="card tight">'+
+    (SHOTS.lic.length?step(1,T("scS1"),st[0]):"")+
+    (SHOTS.lic.length?step(2,T("scS2"),st[1]):"")+
+    (SHOTS.frm.length?step(3,T("scS3"),st[2]):"")+
+    (SHOTS.frm.length?step(4,T("scS4"),st[3]):"")+'</div>');
+  try{
+    /* 1 — רישיון */
+    if(SHOTS.lic.length){
+      st[0]="run";paint();
+      SCAN.lic=parseJSON(await aiVision(SHOTS.lic,P_LIC));
+      st[0]="ok";paint();
+      /* 2 — הצלבה מול המאגר */
+      st[1]="run";paint();
+      try{
+        let veh=null;
+        for(const v of plateVars(SCAN.lic.plate||"")){
+          const r=await moFetch(RES.veh,{mispar_rechev:v},1); if(r.length){veh=r[0];break}
+        }
+        if(veh){SCAN.mot=veh;SCAN.cmp=crossCheck(SCAN.lic,veh);st[1]="ok"}
+        else{SCAN.cmp=[];st[1]="err"}
+      }catch(e){SCAN.motErr=e.message;st[1]="err"}
+      paint();
+    }
+    /* 3 — טופס */
+    if(SHOTS.frm.length){
+      st[2]="run";paint();
+      const raw=parseJSON(await aiVision(SHOTS.frm,P_FRM));
+      st[2]="ok";st[3]="run";paint();
+      /* 4 — התאמה לרשימה הסגורה */
+      S.f.type=raw.form_type==="full"?"full":"basic";
+      S.f.plate=raw.plate||SCAN.lic?.plate||S.f.plate;
+      S.f.km=raw.km||SCAN.lic?.km||S.f.km;
+      S.f.inst=raw.institute||S.f.inst;
+      S.f.rows={};
+      const def=formDef();
+      (raw.rows||[]).forEach(r=>{
+        const row=def.find(x=>x.n===Number(r.n)); if(!row)return;
+        const rec={st:r.status==="bad"?"bad":(r.status==="ok"?"ok":""),diag:[],note:r.text||"",rest:""};
+        const rest=[];
+        if(rec.st==="bad"&&r.text){
+          const pool=poolFor(row);
+          /* מפצלים לפי מפרידים נפוצים בטופס ומתאימים כל חלק בנפרד */
+          String(r.text).split(/[;•·\n]|,(?=\s*[א-ת])/).map(x=>x.trim()).filter(x=>x.length>2)
+            .forEach(part=>{
+              let m=null;
+              const sk=Object.keys(SLANG)
+                .filter(k=>part.includes(k)&&k.length/part.length>=.6)
+                .sort((a,b)=>b.length-a.length)[0];
+              if(sk)m={p:["slang",sk]};
+              if(!m)m=matchDiag(part,pool);
+              if(!m){ if(!ALLPOOL)ALLPOOL=allTerms(); m=matchDiag(part,ALLPOOL,1.6); }
+              if(m)rec.diag.push([m.p[0],m.p[1],part]);
+              else{rest.push(part);SCAN.unmatched.push({n:row.n,name:row.t,text:part})}
+            });
+        }
+        rec.rest=rest.join(" ; ");
+        S.f.rows[r.n]=rec;
+        SCAN.rowsRead.push({n:row.n,name:row.t,st:rec.st,raw:r.text||"",hit:rec.diag.length});
+      });
+      saveF();st[3]="ok";paint();
+    }
+    nav("rev");renderReview();
+  }catch(e){
+    prog('<div class="note warn">'+T("err")+esc(e.message)+'<br>'+T("scFail")+'</div>');
+  }finally{btn.disabled=false}
+};
+
+/* ---------- מסך אישור ---------- */
+function renderReview(){
+  const B=document.getElementById("rv-body");let h="";
+  /* הצלבה */
+  if(SCAN.lic){
+    const bad=SCAN.cmp.filter(c=>c.ok===false);
+    h+='<div class="sect-lbl">'+T("rvId")+'</div>';
+    if(!SCAN.mot){
+      h+='<div class="note warn">'+T("rvNoMot")+'</div>';
+    }else{
+      h+=(bad.length?'<div class="note bad"><b>'+T("rvDiff").replace("%n",bad.length)+'</b></div>'
+                    :'<div class="note info">'+T("rvSame")+'</div>');
+      h+='<div class="card tight">';
+      SCAN.cmp.forEach(c=>{
+        const ic=c.ok===true?'<span class="chip ok">✓</span>':c.ok===false?
+          '<span class="chip '+(c.lv==="bad"?"bad":c.lv==="warn"?"warn":"info")+'">≠</span>':'<span class="chip">—</span>';
+        h+='<div class="kv"><span>'+ic+' '+esc(c.lb)+'</span><b>'+
+           (c.ok===false?'<span style="color:var(--text2)">'+esc(c.lic)+'</span> ↔ '+esc(c.mot):esc(c.mot||c.lic))+'</b></div>';
+      });
+      h+='</div>';
+      bad.forEach(c=>{h+='<div class="note '+(c.lv==="bad"?"bad":"warn")+'" style="font-size:12.5px"><b>'+
+        esc(c.lb)+'</b> — '+esc(c.why)+'</div>'});
+    }
+    if(SCAN.lic.engine_no)h+='<div class="disc">'+T("rvEng")+'</div>';
+  }
+  /* מה נקרא מהטופס */
+  if(SCAN.rowsRead.length){
+    const bad=SCAN.rowsRead.filter(r=>r.st==="bad");
+    h+='<div class="sect-lbl">'+T("rvForm")+'</div>'+
+       '<div class="note info">'+T("rvCheck")+'</div><div class="card tight">';
+    SCAN.rowsRead.forEach(r=>{
+      h+='<div class="kv"><span>'+r.n+'. '+esc(r.name)+'</span><b>'+
+        (r.st==="bad"?'<span class="chip bad">'+T("fmBad")+'</span>':
+         r.st==="ok"?'<span class="chip ok">'+T("fmOk")+'</span>':'<span class="chip">'+T("fmNo")+'</span>')+'</b></div>'+
+        (r.raw?'<div class="disc" style="margin:-4px 0 8px">'+esc(r.raw)+'</div>':"");
+    });
+    h+='</div>';
+    if(SCAN.unmatched.length){
+      h+='<div class="note warn"><b>'+T("rvUnm").replace("%n",SCAN.unmatched.length)+'</b><br>'+
+        SCAN.unmatched.map(u=>"· "+esc(u.text)).join("<br>")+'</div>';
+    }
+  }
+  h+='<div class="note bad" style="margin-top:14px">'+T("rvWarn")+'</div>';
+  B.innerHTML=h;
+}
+document.getElementById("rv-go").onclick=()=>{nav("res");renderResult()};
+document.getElementById("rv-edit").onclick=()=>nav("form");
+
+/* ---------- מוכנות לסריקה ---------- */
+function scanReady(){
+  const ok=S.ai.provider&&VISION_OK.indexOf(S.ai.provider)>=0;
+  const n=document.getElementById("sc-need");
+  n.style.display=ok?"none":"block";
+  n.innerHTML=T("needVision")+' <a href="#" onclick="nav(\'ai\');return false">→ '+T("b4")+'</a>';
+  document.getElementById("sc-go").disabled=!ok;
+  drawThumbs("lic");drawThumbs("frm");
+}
+
+/* ---------- מחירון של המשתמש ---------- */
+document.getElementById("st-pr").onclick=()=>document.getElementById("st-prfile").click();
+document.getElementById("st-prfile").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{
+    const j=JSON.parse(r.result);
+    if(typeof j!=="object"||Array.isArray(j))throw new Error("format");
+    store.set("prices",j);toast(T("done")+" · "+Object.keys(j).length);
+  }catch(err){toast(T("err")+err.message)}};
+  r.readAsText(f);
+};
+/* ---------------- boot ---------------- */
+applyTheme();applyLang();updateLed();
+if(S.ok)nav("home");else nav("gate");
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
