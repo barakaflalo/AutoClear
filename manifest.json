@@ -2,7 +2,7 @@
   "name": "AutoClear — מסביר טופס בדיקת רכב",
   "short_name": "AutoClear",
   "description": "מסביר בשפה פשוטה את טופס בדיקת הרכב לפני קנייה. כלי הסבר בלבד — אינו חוות דעת מקצועית.",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
